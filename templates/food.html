@@ -827,17 +827,62 @@
         function closeCartOnOverlay(e) { if (e.target === document.getElementById('cartOverlay')) closeCart(); }
 
         function placeOrder() {
-            const total = Object.keys(cart).reduce((s, k) => s + cart[k].qty * cart[k].price, 0);
-            closeCart();
-            cart = {};
-            document.querySelectorAll('.add-btn').forEach(b => { b.textContent = '+ Add'; b.classList.remove('added'); });
-            updateCartUI();
-            // Visual confirmation
-            const msg = document.createElement('div');
-            msg.innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32;font-size:40px;margin-bottom:12px;display:block;"></i>Order placed! ₹' + total + ' • Our team will confirm shortly.';
-            msg.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;font-size:18px;font-weight:700;padding:20px;';
-            document.body.appendChild(msg);
-            setTimeout(() => msg.remove(), 3000);
+            const ids = Object.keys(cart);
+            const total = ids.reduce((s, k) => s + cart[k].qty * cart[k].price, 0);
+            const now = new Date().toISOString().slice(0, 10);
+
+            // Save each item to DB with "Payment Pending"
+            const saves = ids.map(id => {
+                const it = cart[id];
+                const ref = 'FOOD-' + Math.floor(Math.random() * 900000 + 100000);
+                return fetch('/api/book/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        booking_ref: ref,
+                        service_type: 'Food',
+                        item_name: it.name + (it.qty > 1 ? ' ×' + it.qty : ''),
+                        from_city: '',
+                        to_city: '',
+                        travel_date: now,
+                        seat_room: '',
+                        class_type: '',
+                        price: it.qty * it.price,
+                        pay_method: 'Pay on Delivery',
+                        status: 'Payment Pending'
+                    })
+                });
+            });
+
+            Promise.all(saves).then(() => {
+                closeCart();
+                cart = {};
+                document.querySelectorAll('.add-btn').forEach(b => { b.textContent = '+ Add'; b.classList.remove('added'); });
+                updateCartUI();
+
+                // Confirmation overlay
+                const msg = document.createElement('div');
+                msg.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;padding:20px;';
+                msg.innerHTML = `
+                    <div style="background:#13162a;border:1px solid rgba(255,159,28,.3);border-radius:24px;padding:36px 40px;max-width:360px;width:100%;">
+                        <i class="fas fa-check-circle" style="color:#06d6a0;font-size:48px;margin-bottom:16px;display:block;"></i>
+                        <div style="font-size:20px;font-weight:900;margin-bottom:8px;">Order Placed!</div>
+                        <div style="font-size:14px;color:rgba(255,255,255,.7);margin-bottom:6px;">Total: <b style="color:#ff9f1c">₹${total}</b></div>
+                        <div style="font-size:13px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.3);color:#ffc107;border-radius:10px;padding:8px 14px;margin:14px 0 20px;">
+                            <i class="fas fa-clock"></i> Payment Pending — Pay on Delivery
+                        </div>
+                        <a href="/profile" style="display:block;padding:12px;background:linear-gradient(135deg,#ff9f1c,#ff5500);border-radius:50px;color:#fff;font-weight:800;text-decoration:none;font-size:14px;margin-bottom:10px;">
+                            <i class="fas fa-user"></i> View My Profile
+                        </a>
+                        <button onclick="this.closest('div').parentNode.remove()" style="padding:10px 24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:50px;color:#fff;font-weight:700;cursor:pointer;font-size:13px;">
+                            Continue Ordering
+                        </button>
+                    </div>`;
+                document.body.appendChild(msg);
+                setTimeout(() => { if (msg.parentNode) msg.remove(); }, 6000);
+            }).catch(() => {
+                alert('Order placed! (Could not save to profile — please check connection)');
+            });
         }
     </script>
 </body>

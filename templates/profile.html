@@ -10,16 +10,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
+        /* ── Theme Variables ──────────────────────────────── */
+        /* Dark (default) */
+        [data-theme="dark"] {
             --profile-bg: #0d0f1a;
             --card-bg: #13162a;
             --card-border: rgba(255, 159, 28, .18);
-            --accent: #ff9f1c;
-            --accent2: #ff5500;
+            --header-bg: rgba(13, 15, 26, .92);
             --text: #e8eaf6;
             --muted: rgba(232, 234, 246, .45);
-            --radius: 20px;
+            --input-bg: rgba(255, 255, 255, .05);
+            --input-brd: rgba(255, 255, 255, .1);
+            --tab-bg: rgba(255, 255, 255, .05);
+            --bar-bg: rgba(255, 255, 255, .07);
+            --toast-bg: #1a1a3a;
             --shadow: 0 8px 40px rgba(0, 0, 0, .45);
+        }
+
+        /* Light */
+        [data-theme="light"] {
+            --profile-bg: #f0f2f8;
+            --card-bg: #ffffff;
+            --card-border: rgba(255, 159, 28, .25);
+            --header-bg: rgba(255, 255, 255, .94);
+            --text: #1a1a2e;
+            --muted: rgba(26, 26, 46, .5);
+            --input-bg: rgba(0, 0, 0, .04);
+            --input-brd: rgba(0, 0, 0, .12);
+            --tab-bg: rgba(0, 0, 0, .04);
+            --bar-bg: rgba(0, 0, 0, .07);
+            --toast-bg: #ffffff;
+            --shadow: 0 8px 40px rgba(0, 0, 0, .1);
+        }
+
+        :root {
+            --accent: #ff9f1c;
+            --accent2: #ff5500;
+            --radius: 20px;
         }
 
         * {
@@ -33,6 +60,16 @@
             background: var(--profile-bg);
             color: var(--text);
             min-height: 100vh;
+            transition: background .3s ease, color .3s ease;
+        }
+
+        /* Cards & header transition with theme */
+        .pr-card,
+        .bk-card,
+        .bk-tabs,
+        .bk-empty,
+        .stat-box {
+            transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
         }
 
         /* ── Header ──────────────────────────────────── */
@@ -41,12 +78,13 @@
             align-items: center;
             justify-content: space-between;
             padding: 18px 32px;
-            background: rgba(13, 15, 26, .92);
+            background: var(--header-bg);
             border-bottom: 1px solid var(--card-border);
             backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
             z-index: 100;
+            transition: background .3s;
         }
 
         .pr-logo {
@@ -261,13 +299,13 @@
         .pr-input {
             width: 100%;
             padding: 11px 14px;
-            background: rgba(255, 255, 255, .05);
-            border: 1.5px solid rgba(255, 255, 255, .1);
+            background: var(--input-bg);
+            border: 1.5px solid var(--input-brd);
             border-radius: 12px;
             color: var(--text);
             font-size: 14px;
             font-family: inherit;
-            transition: border-color .2s;
+            transition: border-color .2s, background .2s;
             margin-bottom: 16px;
         }
 
@@ -348,7 +386,7 @@
             font-weight: 700;
             cursor: pointer;
             border: 1.5px solid transparent;
-            background: rgba(255, 255, 255, .05);
+            background: var(--tab-bg);
             color: var(--muted);
             transition: all .18s;
         }
@@ -507,6 +545,51 @@
             color: #ff4d6d;
         }
 
+        .bk-status.Payment-Pending {
+            background: rgba(255, 193, 7, .15);
+            color: #ffc107;
+            animation: blink-pending 2s ease-in-out infinite;
+        }
+
+        @keyframes blink-pending {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .55;
+            }
+        }
+
+        /* Pay Now button */
+        .pay-now-btn {
+            margin-top: 8px;
+            padding: 5px 14px;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            border: none;
+            border-radius: 50px;
+            color: #1a1a1a;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform .15s, box-shadow .15s;
+            display: block;
+            width: 100%;
+        }
+
+        .pay-now-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(255, 193, 7, .45);
+        }
+
+        .pay-now-btn:disabled {
+            opacity: .5;
+            pointer-events: none;
+        }
+
         /* Empty State */
         .bk-empty {
             background: var(--card-bg);
@@ -572,14 +655,14 @@
             bottom: 28px;
             left: 50%;
             transform: translateX(-50%) translateY(80px);
-            background: #1a1a3a;
+            background: var(--toast-bg);
             border: 1px solid var(--card-border);
             border-radius: 50px;
             padding: 12px 28px;
             font-size: 14px;
             font-weight: 700;
             color: var(--text);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .3);
             transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
             z-index: 9999;
             white-space: nowrap;
@@ -650,7 +733,7 @@
         .type-bar-wrap {
             flex: 1;
             height: 6px;
-            background: rgba(255, 255, 255, .07);
+            background: var(--bar-bg);
             border-radius: 10px;
             overflow: hidden;
         }
@@ -672,12 +755,19 @@
     </style>
 </head>
 
-<body>
+<body data-theme="dark">
 
     <!-- ── Header ──────────────────────────────────── -->
     <header class="pr-header">
         <a href="{{ url_for('index') }}" class="pr-logo">✈ ASRS<span> Travel</span></a>
         <nav class="pr-nav">
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" title="Toggle theme" style="width:38px;height:38px;border-radius:50%;background:var(--tab-bg);
+                     border:1.5px solid var(--card-border);color:var(--accent);font-size:16px;
+                     cursor:pointer;display:flex;align-items:center;justify-content:center;
+                     transition:background .2s,transform .15s;">
+                <i class="fas fa-moon"></i>
+            </button>
             <a href="{{ url_for('index') }}" class="btn-back"><i class="fas fa-home"></i> Home</a>
             <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </nav>
@@ -795,6 +885,8 @@
                 <button class="bk-tab" data-filter="Train"><i class="fas fa-train"></i> Trains</button>
                 <button class="bk-tab" data-filter="Bus"><i class="fas fa-bus"></i> Buses</button>
                 <button class="bk-tab" data-filter="Food"><i class="fas fa-utensils"></i> Food</button>
+                <button class="bk-tab" data-filter="__pending__" style="color:#ffc107;border-color:#ffc107;"><i
+                        class="fas fa-clock"></i> Pending</button>
             </div>
 
             <!-- Booking List -->
@@ -803,7 +895,7 @@
                 {% for b in bookings %}
                 {% set icons =
                 {'Flight':'fa-plane','Hotel':'fa-hotel','Train':'fa-train','Bus':'fa-bus','Food':'fa-utensils'} %}
-                <div class="bk-card" data-type="{{ b.service_type }}">
+                <div class="bk-card" data-type="{{ b.service_type }}" data-status="{{ b.status }}">
                     <div class="bk-icon {{ b.service_type }}">
                         <i class="fas {{ icons.get(b.service_type, 'fa-ticket-alt') }}"></i>
                     </div>
@@ -815,12 +907,26 @@
                                 class="fas fa-arrow-right bk-arrow"></i><span>{{ b.to_city }}</span>{% endif %}
                             {% if b.seat_room %} &bull; {{ b.seat_room }}{% endif %}
                             {% if b.class_type %} &bull; {{ b.class_type }}{% endif %}
+                            {% if b.status == 'Payment Pending' and b.service_type == 'Food' %}
+                            <span style="display:block;margin-top:4px;font-size:11px;color:#ffc107;">
+                                <i class="fas fa-clock"></i> Pay on delivery
+                            </span>
+                            {% elif b.status == 'Payment Pending' %}
+                            <span style="display:block;margin-top:4px;font-size:11px;color:#ffc107;">
+                                <i class="fas fa-clock"></i> Complete payment to confirm
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="bk-meta">
-                        <div class="bk-price">₹{{ "{:,}".format(b.price) }}</div>
+                        <div class="bk-price">&#8377;{{ "{:,}".format(b.price) }}</div>
                         <div class="bk-date">{{ b.booked_at[:10] }}</div>
-                        <div class="bk-status {{ b.status }}">{{ b.status }}</div>
+                        <div class="bk-status {{ b.status|replace(' ','-') }}">{{ b.status }}</div>
+                        {% if b.status == 'Payment Pending' and b.service_type == 'Food' %}
+                        <button class="pay-now-btn" onclick="payNow(this, '{{ b.booking_ref }}')" title="Mark as paid">
+                            <i class="fas fa-credit-card"></i> Pay Now
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -831,10 +937,10 @@
             <div class="bk-empty" id="bk-empty">
                 <i class="fas fa-ticket-alt"></i>
                 <h3>No Bookings Yet</h3>
-                <p>Your confirmed bookings will appear here.<br>
-                    Start exploring flights, hotels, trains and more!</p>
+                <p>Your bookings (confirmed and pending) will appear here.<br>
+                    Start exploring flights, hotels, trains, food and more!</p>
                 <a href="{{ url_for('index') }}" class="btn-book-now">
-                    <i class="fas fa-search"></i> Search & Book
+                    <i class="fas fa-search"></i> Search &amp; Book
                 </a>
             </div>
             {% endif %}
@@ -845,13 +951,15 @@
     <!-- Toast -->
     <div id="pr-toast"></div>
 
-    <!-- Theme Toggle -->
-    <button id="theme-toggle" style="position:fixed;bottom:24px;right:24px;
-  width:48px;height:48px;border-radius:50%;background:rgba(255,159,28,.15);
-  border:1.5px solid rgba(255,159,28,.3);color:#ff9f1c;font-size:18px;
-  cursor:pointer;z-index:900;">
-        <i class="fas fa-moon"></i>
-    </button>
+    <!-- Theme init: apply saved theme BEFORE paint to avoid flash -->
+    <script>
+        (function () {
+            var saved = localStorage.getItem('kyt-theme') || 'dark';
+            document.body.setAttribute('data-theme', saved);
+            var icon = document.querySelector('#theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        })();
+    </script>
     <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
 
     <script>
@@ -890,7 +998,7 @@
                 .then(function (d) {
                     document.querySelector('.avatar-edit-btn').classList.remove('uploading');
                     if (d.success) {
-                        showToast('Profile photo updated! ✅', 'success');
+                        showToast('Profile photo updated!', 'success');
                     } else {
                         showToast(d.message || 'Upload failed.', 'error');
                     }
@@ -910,18 +1018,26 @@
                 var cards = document.querySelectorAll('.bk-card');
                 var shown = 0;
                 cards.forEach(function (card) {
-                    var match = filter === 'all' || card.dataset.type === filter;
+                    var match;
+                    if (filter === 'all') {
+                        match = true;
+                    } else if (filter === '__pending__') {
+                        match = card.dataset.status === 'Payment Pending';
+                    } else {
+                        match = card.dataset.type === filter;
+                    }
                     card.style.display = match ? '' : 'none';
                     if (match) shown++;
                 });
                 var empty = document.getElementById('bk-empty-filtered');
+                var label = filter === '__pending__' ? 'pending' : filter.toLowerCase();
                 if (shown === 0 && cards.length > 0) {
                     if (!empty) {
                         var div = document.createElement('div');
                         div.id = 'bk-empty-filtered';
                         div.className = 'bk-empty';
-                        div.innerHTML = '<i class="fas fa-filter"></i><h3>No ' + filter + ' bookings</h3>' +
-                            '<p>You have not booked any ' + filter.toLowerCase() + ' services yet.</p>';
+                        div.innerHTML = '<i class="fas fa-filter"></i><h3>No ' + label + ' bookings</h3>' +
+                            '<p>You have no ' + label + ' bookings at the moment.</p>';
                         document.getElementById('bk-list').after(div);
                     }
                 } else {
@@ -929,6 +1045,42 @@
                 }
             });
         });
+
+        /* ── Pay Now (Food — Payment Pending) ─────────── */
+        function payNow(btn, bookingRef) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            fetch('/api/book/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booking_ref: bookingRef, status: 'Confirmed' })
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.success) {
+                        // Update card UI live
+                        var card = btn.closest('.bk-card');
+                        card.dataset.status = 'Confirmed';
+                        var badge = card.querySelector('.bk-status');
+                        badge.className = 'bk-status Confirmed';
+                        badge.textContent = 'Confirmed';
+                        var hint = card.querySelector('[style*="fa-clock"]');
+                        var hintSpan = card.querySelector('span[style*="ffc107"]');
+                        if (hintSpan) hintSpan.remove();
+                        btn.remove();
+                        showToast('Payment confirmed! Enjoy your food.', 'success');
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-credit-card"></i> Pay Now';
+                        showToast('Could not update — try again.', 'error');
+                    }
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-credit-card"></i> Pay Now';
+                    showToast('Connection error. Try again.', 'error');
+                });
+        }
 
         /* ── Toast ─────────────────────────────────────── */
         function showToast(msg, type) {
@@ -944,6 +1096,31 @@
         });
         document.querySelectorAll('[data-width]').forEach(function (el) {
             el.style.width = el.getAttribute('data-width') + '%';
+        });
+
+        /* ── Sync theme toggle icon & body on load ─────── */
+        document.addEventListener('DOMContentLoaded', function () {
+            var saved = localStorage.getItem('kyt-theme') || 'dark';
+            var body = document.body;
+            var icon = document.querySelector('#theme-toggle i');
+
+            // Ensure body carries the right attribute (bookticket.js writes to <html>)
+            body.setAttribute('data-theme', saved);
+            document.documentElement.setAttribute('data-theme', saved);
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+
+            // Re-wire toggle so it updates <body> as well (bookticket.js only touches <html>)
+            var btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    var next = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    body.setAttribute('data-theme', next);
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('kyt-theme', next);
+                    var ic = btn.querySelector('i');
+                    if (ic) ic.className = next === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                });
+            }
         });
     </script>
 </body>

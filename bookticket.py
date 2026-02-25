@@ -715,7 +715,7 @@ def save_booking():
                 data.get('class_type',''),
                 int(data.get('price', 0)),
                 data.get('pay_method','UPI'),
-                'Confirmed'
+                data.get('status', 'Confirmed')       # ← now dynamic
             ))
             conn.commit()
         except Exception as e:
@@ -724,6 +724,27 @@ def save_booking():
     return jsonify({'success': True})
 
 
-# ────────────────────────────────────────────────
+# ── Update booking status (Payment Pending → Confirmed) ──
+@app.route("/api/book/update-status", methods=['POST'])
+@login_required
+def update_booking_status():
+    data = request.get_json(force=True)
+    booking_ref = data.get('booking_ref', '')
+    new_status  = data.get('status', 'Confirmed')
+    username    = session['user']
+    with get_db() as conn:
+        user = conn.execute(
+            "SELECT id FROM users WHERE username = ?", (username,)
+        ).fetchone()
+        if not user:
+            return jsonify({'success': False, 'message': 'User not found.'})
+        conn.execute("""
+            UPDATE bookings SET status = ?
+            WHERE booking_ref = ? AND user_id = ?
+        """, (new_status, booking_ref, user['id']))
+        conn.commit()
+    return jsonify({'success': True})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

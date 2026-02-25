@@ -467,6 +467,9 @@
                 <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:36px;">
                     <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-download"></i> Download
                         Ticket</button>
+                    <a href="/profile"><button class="btn btn-primary"
+                            style="background:linear-gradient(135deg,#ff9f1c,#ff5500)"><i class="fas fa-user"></i> My
+                            Profile</button></a>
                     <a href="/"><button class="btn btn-ghost"><i class="fas fa-home"></i> Back to Home</button></a>
                 </div>
             </div>
@@ -514,6 +517,8 @@
         }
 
         /* ─── Step Navigation ─────────────────── */
+        let pendingBookId = null;   // set when user reaches payment step
+
         window.goToStep = (n) => {
             if (n === 2 && !selectedSeat) { alert('Please select a seat / room first.'); return; }
             for (let i = 1; i <= 4; i++) {
@@ -526,7 +531,30 @@
                 document.getElementById('review-seat-val').textContent = selectedSeat;
                 document.getElementById('review-total').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
             }
-            if (n === 3) document.getElementById('pay-amount-display').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+            if (n === 3) {
+                document.getElementById('pay-amount-display').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+                // ── Save as "Payment Pending" when user reaches payment step ──
+                if (!pendingBookId) {
+                    pendingBookId = 'KNY-' + Math.floor(Math.random() * 900000 + 100000);
+                    fetch('/api/book/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            booking_ref: pendingBookId,
+                            service_type: '{{ type }}',
+                            item_name: '{{ name }}',
+                            from_city: '{{ src }}',
+                            to_city: '{{ dst }}',
+                            travel_date: '{{ dep }}',
+                            seat_room: selectedSeat || '',
+                            class_type: '{{ cls }}',
+                            price: selectedPrice,
+                            pay_method: 'Pending',
+                            status: 'Payment Pending'
+                        })
+                    }).catch(() => { });
+                }
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
@@ -563,7 +591,7 @@
             payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             payBtn.disabled = true;
             setTimeout(() => {
-                const bookId = 'KNY-' + Math.floor(Math.random() * 900000 + 100000);
+                const bookId = pendingBookId || ('KNY-' + Math.floor(Math.random() * 900000 + 100000));
                 document.getElementById('confirm-id').textContent = bookId;
                 document.getElementById('confirm-seat').textContent = selectedSeat || '—';
                 document.getElementById('confirm-amount').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
@@ -572,23 +600,33 @@
                 }[selectedPayMethod];
                 goToStep(4);
 
-                // ── Save booking to DB ──────────────────────
-                fetch('/api/book/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        booking_ref: bookId,
-                        service_type: '{{ type }}',
-                        item_name: '{{ name }}',
-                        from_city: '{{ src }}',
-                        to_city: '{{ dst }}',
-                        travel_date: '{{ dep }}',
-                        seat_room: selectedSeat || '',
-                        class_type: '{{ cls }}',
-                        price: selectedPrice,
-                        pay_method: { upi: 'UPI/Online', card: 'Card', cash: 'Cash' }[selectedPayMethod] || 'UPI'
-                    })
-                }).catch(function () { });
+                // ── Upgrade from Payment Pending → Confirmed ──
+                if (pendingBookId) {
+                    fetch('/api/book/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ booking_ref: pendingBookId, status: 'Confirmed' })
+                    }).catch(() => { });
+                } else {
+                    // fallback: save fresh if somehow pending was not set
+                    fetch('/api/book/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            booking_ref: bookId,
+                            service_type: '{{ type }}',
+                            item_name: '{{ name }}',
+                            from_city: '{{ src }}',
+                            to_city: '{{ dst }}',
+                            travel_date: '{{ dep }}',
+                            seat_room: selectedSeat || '',
+                            class_type: '{{ cls }}',
+                            price: selectedPrice,
+                            pay_method: { upi: 'UPI/Online', card: 'Card', cash: 'Cash' }[selectedPayMethod] || 'UPI',
+                            status: 'Confirmed'
+                        })
+                    }).catch(() => { });
+                }
             }, 2200);
         };
     </script>
