@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Deals — ASRS Travel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="light">
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="window.location='/'"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <div class="header-actions">
+            <span class="user-greeting">Hi, {{ user_name }} 👋</span>
+            <a href="/"><button class="btn btn-ghost"><i class="fas fa-search"></i> New Search</button></a>
+            <a href="{{ url_for('logout') }}"><button class="btn btn-danger">Logout</button></a>
+        </div>
+    </header>
+
+    <!-- Deals Hero Banner -->
+    <div class="deals-hero">
+        <p>Member Exclusive Access</p>
+        <h1>TODAY'S<br>BEST DEALS</h1>
+        <p style="margin-top:14px;font-size:16px;opacity:0.85;font-weight:400;letter-spacing:0;">
+            {{ items|length }} curated deals handpicked for you
+        </p>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="deals-filter">
+        <button class="filter-btn active" onclick="filterDeals('all', this)">All Deals</button>
+        <button class="filter-btn" onclick="filterDeals('Flight', this)"><i class="fas fa-plane"></i> Flights</button>
+        <button class="filter-btn" onclick="filterDeals('Train', this)"><i class="fas fa-train"></i> Trains</button>
+        <button class="filter-btn" onclick="filterDeals('Bus', this)"><i class="fas fa-bus"></i> Buses</button>
+        <button class="filter-btn" onclick="filterDeals('Hotel', this)"><i class="fas fa-hotel"></i> Hotels</button>
+    </div>
+
+    <!-- Deals Grid -->
+    <div class="deals-grid" id="deals-grid">
+
+        {% for item in items %}
+
+        {% if item.category == 'Hotel' %}
+        <!-- Hotel Deal Card -->
+        <div class="deal-card hotel-card" data-type="Hotel" style="padding:0;">
+            <img src="{{ item.img }}" alt="{{ item.name }}" style="width:100%;height:200px;object-fit:cover;">
+            <div class="hotel-body">
+                <span class="hotel-badge">🏨 Hotel Deal</span>
+                <div class="hotel-name">{{ item.name }}</div>
+                <div class="hotel-room">{{ item.meta }}</div>
+                <div class="hotel-amenities">
+                    {% for a in item.amenities %}<span class="amenity-tag">{{ a }}</span>{% endfor %}
+                </div>
+                <div class="hotel-footer">
+                    <div>
+                        <div class="hotel-price">₹{{ item.price }}</div>
+                        <div class="per-night">per night</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="hotel-rating">★ {{ item.rating }}</div>
+                        <button class="btn btn-primary" style="margin-top:8px;">Book Stay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Transport Deal Card -->
+        <div class="deal-card" data-type="{{ item.category }}">
+            <div class="deal-card-inner">
+
+                {% if item.category == 'Flight' %}
+                <span class="deal-type-badge"><i class="fas fa-plane"></i> Flight Deal</span>
+                {% elif item.category == 'Train' %}
+                <span class="deal-type-badge"><i class="fas fa-train"></i> Train Deal</span>
+                {% else %}
+                <span class="deal-type-badge"><i class="fas fa-bus"></i> Bus Deal</span>
+                {% endif %}
+
+                <div class="deal-route">{{ item.from }} → {{ item.to }}</div>
+                <div class="deal-carrier">{{ item.carrier }}</div>
+
+                <div class="deal-times">
+                    <div><span>{{ item.dep }}</span><br><small>Depart</small></div>
+                    <div class="deal-arrow"></div>
+                    <div style="text-align:right"><span>{{ item.arr }}</span><br><small>Arrive</small></div>
+                </div>
+
+                <div class="deal-footer">
+                    <div class="deal-price">₹{{ item.price }}</div>
+                    <div>
+                        <div class="deal-dur">{{ item.dur }}</div>
+                        <button class="btn btn-primary" style="margin-top:8px;">Book Now</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+        {% endfor %}
+
+    </div>
+
+    <!-- Footer -->
+    <footer>&copy; 2026 ASRS Travel</footer>
+
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+    <script>
+        function filterDeals(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.deal-card, .hotel-card').forEach(card => {
+                const match = type === 'all' || card.dataset.type === type;
+                card.style.display = match ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASRS Travel — Sign In</title>
+    <meta name="description"
+        content="Sign in or create your ASRS Travel account to book flights, trains, buses and hotels.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Login Page Specific ───────────────────────────────── */
+        .login-page {
+            min-height: calc(100vh - 72px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            box-shadow: 0 30px 80px var(--shadow);
+            width: 100%;
+            max-width: 460px;
+            padding: 44px 42px;
+            border: 1px solid var(--border);
+            animation: cardUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes cardUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Brand inside card */
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-brand .brand-logo {
+            font-size: 30px;
+            font-weight: 900;
+            color: var(--accent2);
+            letter-spacing: -0.5px;
+            cursor: pointer;
+        }
+
+        .auth-brand .brand-logo span {
+            color: var(--accent);
+        }
+
+        .auth-brand .brand-logo .logo-plane {
+            color: var(--accent);
+            font-size: 24px;
+            display: inline-block;
+            transform: rotate(-45deg) translateY(-2px);
+            margin: 0 1px;
+            filter: drop-shadow(0 0 6px rgba(255, 159, 28, 0.55));
+        }
+
+        .auth-brand p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Tab switcher — matches site's cat-tab style */
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            background: var(--input-bg);
+            border-radius: 14px;
+            padding: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 11px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            background: transparent;
+            color: var(--muted);
+            transition: all 0.22s;
+            letter-spacing: 0.3px;
+        }
+
+        .auth-tab.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(255, 159, 28, 0.35);
+        }
+
+        /* Flash alerts */
+        .auth-alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .auth-alert.error {
+            background: rgba(255, 69, 69, 0.12);
+            border: 1px solid rgba(255, 69, 69, 0.3);
+            color: #ff5555;
+        }
+
+        .auth-alert.success {
+            background: rgba(46, 196, 182, 0.12);
+            border: 1px solid rgba(46, 196, 182, 0.3);
+            color: #2ec4b6;
+        }
+
+        .auth-alert.info {
+            background: rgba(79, 172, 254, 0.12);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            color: #4facfe;
+        }
+
+        /* Form panes */
+        .auth-pane {
+            display: none;
+        }
+
+        .auth-pane.active {
+            display: block;
+        }
+
+        /* Fields — matching .field from bookticket.css */
+        .auth-field {
+            background: var(--input-bg);
+            padding: 13px 18px;
+            border-radius: 14px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            margin-bottom: 14px;
+            position: relative;
+        }
+
+        .auth-field:focus-within {
+            border-color: var(--accent);
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .auth-field .field-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-field i.field-icon {
+            color: var(--muted);
+            font-size: 14px;
+            width: 16px;
+            flex-shrink: 0;
+        }
+
+        .auth-field input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            outline: none;
+            width: 100%;
+        }
+
+        .auth-field input::placeholder {
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .auth-field.error-field {
+            border-color: #ff4545;
+        }
+
+        /* Password toggle */
+        .pwd-eye {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 4px;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .pwd-eye:hover {
+            color: var(--accent);
+        }
+
+        /* Country code prefix */
+        .phone-prefix {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--muted);
+            padding-right: 6px;
+            border-right: 2px solid var(--border);
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+
+        /* Password strength */
+        .strength-wrap {
+            margin-top: 6px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 4px;
+            background: var(--border);
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .strength-text {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        /* Submit button — matches site's btn-search */
+        .auth-submit {
+            width: 100%;
+            padding: 18px;
+            border-radius: 14px;
+            background: var(--text);
+            color: var(--accent);
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .auth-submit:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .auth-submit:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Forgot password link */
+        .forgot-link {
+            text-align: right;
+            margin-bottom: 2px;
+        }
+
+        .forgot-link a {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .forgot-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Switch link */
+        .auth-switch {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .auth-switch a {
+            color: var(--accent);
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* OTP digit row */
+        .otp-digits {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+
+        .otp-digit {
+            width: 48px;
+            height: 56px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--input-bg);
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .otp-digit:focus {
+            border-color: var(--accent);
+        }
+
+        .otp-demo-hint {
+            background: rgba(255, 159, 28, 0.1);
+            border: 1px solid rgba(255, 159, 28, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        /* Step indicators */
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            width: 24px;
+            border-radius: 4px;
+            background: var(--accent);
+        }
+
+        .step-dot.done {
+            background: #2ec4b6;
+        }
+
+        /* Resend countdown */
+        .resend-row {
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        .resend-row a {
+            color: var(--accent);
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Back link */
+        .auth-back {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .auth-back:hover {
+            color: var(--accent2);
+        }
+
+        @media(max-width:500px) {
+            .auth-card {
+                padding: 32px 20px;
+                border-radius: 20px;
+            }
+
+            .otp-digit {
+                width: 40px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <!-- ─── Header ──────────────────────────────────────── -->
+    <header>
+        <div class="logo" onclick="window.location='/'">
+            A<i class="fas fa-plane logo-plane"></i>RS<span> Travel</span>
+        </div>
+        <div class="header-actions">
+            <a href="/"><button class="btn btn-ghost"><i class="fas fa-home"></i> Home</button></a>
+            <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-toggle" title="Toggle Theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ─── Login Page ──────────────────────────────────── -->
+    <div class="login-page">
+        <div class="auth-card" id="mainCard">
+
+            <!-- Brand -->
+            <div class="auth-brand">
+                <div class="brand-logo">
+                    A<i class="fas fa-plane logo-plane"></i>RS<span> Travel</span>
+                </div>
+                <p>Flights · Hotels · Trains · Food — All in one place</p>
+            </div>
+
+            <!-- Flash messages from server -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="auth-alert {{ cat }}">
+                <i class="fas fa-{% if cat=='error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                {{ msg }}
+            </div>
+            {% endfor %}{% endif %}
+            {% endwith %}
+
+            <!-- JS alert area -->
+            <div id="jsAlert" style="display:none;" class="auth-alert error"></div>
+
+            <!-- ═══════════════ MAIN AUTH VIEW ═══════════════════ -->
+            <div id="authView">
+
+                <!-- Tab bar -->
+                <div class="auth-tabs">
+                    <button class="auth-tab {% if tab != 'register' %}active{% endif %}" id="tabLogin"
+                        onclick="switchTab('login')">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                    <button class="auth-tab {% if tab == 'register' %}active{% endif %}" id="tabReg"
+                        onclick="switchTab('register')">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- LOGIN PANE ─────────────────────────────────── -->
+                <div class="auth-pane {% if tab != 'register' %}active{% endif %}" id="paneLogin">
+                    <form method="POST" action="/auth/login" onsubmit="return lockBtn('loginBtn')">
+                        <div class="auth-field" id="f-ident">
+                            <label>Email or Username</label>
+                            <div class="field-row">
+                                <i class="fas fa-user field-icon"></i>
+                                <input type="text" name="identifier" id="loginId"
+                                    placeholder="your@email.com or username" autocomplete="username" required>
+                            </div>
+                        </div>
+                        <div class="auth-field" id="f-pw">
+                            <label>Password</label>
+                            <div class="field-row">
+                                <i class="fas fa-lock field-icon"></i>
+                                <input type="password" name="password" id="loginPw" placeholder="Your password"
+                                    autocomplete="current-password" required>
+                                <button type="button" class="pwd-eye" onclick="toggleEye('loginPw',this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="forgot-link">
+                            <a onclick="showForgot()">Forgot Password?</a>
+                        </div>
+                        <button type="submit" class="auth-submit" id="loginBtn">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                    </form>
+                    <div class="auth-switch">
+                        New here? <a onclick="switchTab('register')">Create a free account</a>
+                    </div>
+                </div>
+
+                <!-- REGISTER PANE ──────────────────────────────── -->
+                <div class="auth-pane {% if tab == 'register' %}active{% endif %}" id="paneReg">
+                    <form method="POST" action="/auth/register" onsubmit="return validateReg()">
+                        <div class="auth-field">
+                            <label>Username</label>
+                            <div class="field-row">
+                                <i class="fas fa-user field-icon"></i>
+                                <input type="text" name="username" id="regUser" placeholder="Min 3 characters"
+                                    minlength="3" autocomplete="username" required>
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label>Email Address</label>
+                            <div class="field-row">
+                                <i class="fas fa-envelope field-icon"></i>
+                                <input type="email" name="email" id="regEmail" placeholder="your@email.com"
+                                    autocomplete="email" required>
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label>Password</label>
+                            <div class="field-row">
+                                <i class="fas fa-lock field-icon"></i>
+                                <input type="password" name="password" id="regPw" placeholder="Min 6 characters"
+                                    minlength="6" autocomplete="new-password" required oninput="checkStr(this.value)">
+                                <button type="button" class="pwd-eye" onclick="toggleEye('regPw',this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="strength-wrap">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strFill"></div>
+                                </div>
+                                <div class="strength-text" id="strText"></div>
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label>Confirm Password</label>
+                            <div class="field-row">
+                                <i class="fas fa-lock field-icon"></i>
+                                <input type="password" name="confirm_password" id="regConfirm"
+                                    placeholder="Same password again" autocomplete="new-password" required>
+                                <button type="button" class="pwd-eye" onclick="toggleEye('regConfirm',this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="auth-submit" id="regBtn">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </form>
+                    <div class="auth-switch">
+                        Already a member? <a onclick="switchTab('login')">Sign in here</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ FORGOT PASSWORD VIEW ════════════════ -->
+            <div id="forgotView" style="display:none;">
+
+                <!-- Step dots -->
+                <div class="step-dots">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                </div>
+
+                <!-- STEP 1: Mobile number -->
+                <div id="step1">
+                    <h3 style="font-size:17px;font-weight:900;margin-bottom:6px;color:var(--text)">
+                        <i class="fas fa-key" style="color:var(--accent)"></i> Forgot Password
+                    </h3>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+                        Enter your registered mobile number. We'll send you a one-time password.
+                    </p>
+                    <div class="auth-field">
+                        <label>Mobile Number</label>
+                        <div class="field-row">
+                            <span class="phone-prefix">
+                                <i class="fas fa-flag" style="font-size:11px;margin-right:3px;"></i>+91
+                            </span>
+                            <input type="tel" id="mobileInput" placeholder="10-digit mobile number" maxlength="10"
+                                inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+                        </div>
+                    </div>
+                    <button class="auth-submit" onclick="sendOTP()">
+                        <i class="fas fa-paper-plane"></i> Send OTP
+                    </button>
+                </div>
+
+                <!-- STEP 2: OTP Entry -->
+                <div id="step2" style="display:none;">
+                    <h3 style="font-size:17px;font-weight:900;margin-bottom:6px;color:var(--text)">
+                        <i class="fas fa-shield-alt" style="color:var(--accent)"></i> Enter OTP
+                    </h3>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:4px;">
+                        Enter the 6-digit code sent to your mobile.
+                    </p>
+                    <!-- Demo OTP hint -->
+                    <div class="otp-demo-hint" id="otpHint"></div>
+
+                    <div class="otp-digits">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o1" oninput="otpNext(this,'o2')">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o2" oninput="otpNext(this,'o3')"
+                            onkeydown="otpBack(event,'o1')">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o3" oninput="otpNext(this,'o4')"
+                            onkeydown="otpBack(event,'o2')">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o4" oninput="otpNext(this,'o5')"
+                            onkeydown="otpBack(event,'o3')">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o5" oninput="otpNext(this,'o6')"
+                            onkeydown="otpBack(event,'o4')">
+                        <input class="otp-digit" maxlength="1" inputmode="numeric" id="o6" oninput="otpNext(this,null)"
+                            onkeydown="otpBack(event,'o5')">
+                    </div>
+                    <div class="resend-row">
+                        <span id="countdownTxt"></span>
+                        <a id="resendLink" onclick="sendOTP(true)">Resend OTP</a>
+                    </div>
+                    <button class="auth-submit" style="margin-top:14px;" onclick="verifyOTP()">
+                        <i class="fas fa-check-circle"></i> Verify OTP
+                    </button>
+                </div>
+
+                <!-- STEP 3: Reset Password -->
+                <div id="step3" style="display:none;">
+                    <h3 style="font-size:17px;font-weight:900;margin-bottom:6px;color:var(--text)">
+                        <i class="fas fa-lock-open" style="color:var(--accent)"></i> New Password
+                    </h3>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+                        OTP verified! Set a new password for your account.
+                    </p>
+                    <div class="auth-field">
+                        <label>New Password</label>
+                        <div class="field-row">
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password" id="newPw" placeholder="Min 6 characters"
+                                oninput="checkStr(this.value)">
+                            <button type="button" class="pwd-eye" onclick="toggleEye('newPw',this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="strength-wrap">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strFill2"></div>
+                            </div>
+                            <div class="strength-text" id="strText2"></div>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label>Confirm Password</label>
+                        <div class="field-row">
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password" id="confirmPw" placeholder="Same password again">
+                            <button type="button" class="pwd-eye" onclick="toggleEye('confirmPw',this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="auth-submit" onclick="resetPassword()">
+                        <i class="fas fa-save"></i> Reset Password
+                    </button>
+                </div>
+
+                <div style="text-align:center;margin-top:16px;">
+                    <a style="font-size:13px;color:var(--muted);cursor:pointer;font-weight:700;" onclick="hideForgot()">
+                        <i class="fas fa-arrow-left"></i> Back to Sign In
+                    </a>
+                </div>
+            </div>
+
+            <a href="/" class="auth-back"><i class="fas fa-plane" style="color:var(--accent)"></i> Back to Home</a>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 ASRS Travel — All rights reserved</footer>
+
+    <script>
+        // ── Theme (matches site) ──────────────────────────────
+        function toggleTheme() {
+            const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
+            document.getElementById('theme-toggle').innerHTML =
+                t === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        (function () {
+            const t = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', t);
+            if (t === 'dark') document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
+        })();
+
+        // ── Tab switching ──────────────────────────────────────
+        function switchTab(tab) {
+            document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('tabReg').classList.toggle('active', tab === 'register');
+            document.getElementById('paneLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('paneReg').classList.toggle('active', tab === 'register');
+            clearAlert();
+        }
+
+        // URL param ?tab=register
+        if (new URLSearchParams(location.search).get('tab') === 'register') switchTab('register');
+
+        // ── Alert helpers ──────────────────────────────────────
+        function showAlert(msg, type) {
+            const el = document.getElementById('jsAlert');
+            el.className = 'auth-alert ' + (type || 'error');
+            el.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle') + '"></i> ' + msg;
+            el.style.display = 'flex';
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        function clearAlert() {
+            document.getElementById('jsAlert').style.display = 'none';
+        }
+
+        // ── Password eye toggle ────────────────────────────────
+        function toggleEye(id, btn) {
+            const inp = document.getElementById(id);
+            const ic = btn.querySelector('i');
+            if (inp.type === 'password') { inp.type = 'text'; ic.className = 'fas fa-eye-slash'; }
+            else { inp.type = 'password'; ic.className = 'fas fa-eye'; }
+        }
+
+        // ── Password strength ──────────────────────────────────
+        const LEVELS = [
+            { pct: '15%', col: '#ff4545', lbl: 'Very Weak' },
+            { pct: '35%', col: '#ff8c00', lbl: 'Weak' },
+            { pct: '60%', col: '#ffd600', lbl: 'Fair' },
+            { pct: '80%', col: '#4caf50', lbl: 'Strong' },
+            { pct: '100%', col: '#00bcd4', lbl: 'Very Strong' },
+        ];
+        function checkStr(pw, fillId, textId) {
+            fillId = fillId || 'strFill'; textId = textId || 'strText';
+            const fill = document.getElementById(fillId);
+            const text = document.getElementById(textId);
+            if (!fill) return;
+            let score = 0;
+            if (pw.length >= 6) score++;
+            if (pw.length >= 10) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+            const lvl = LEVELS[Math.min(score, 4)];
+            fill.style.width = pw.length ? lvl.pct : '0';
+            fill.style.background = lvl.col;
+            text.textContent = pw.length ? lvl.lbl : '';
+            text.style.color = lvl.col;
+        }
+
+        // ── Lock submit button while submitting ────────────────
+        function lockBtn(id) {
+            const btn = document.getElementById(id);
+            if (!btn) return true;
+            btn.disabled = true;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait…';
+            setTimeout(() => { btn.disabled = false; btn.innerHTML = orig; }, 8000);
+            return true;
+        }
+
+        // ── Register validation ────────────────────────────────
+        function validateReg() {
+            const u = document.getElementById('regUser').value.trim();
+            const e = document.getElementById('regEmail').value.trim();
+            const p = document.getElementById('regPw').value;
+            const c = document.getElementById('regConfirm').value;
+            if (u.length < 3) { showAlert('Username must be at least 3 characters.'); return false; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { showAlert('Enter a valid email address.'); return false; }
+            if (p.length < 6) { showAlert('Password must be at least 6 characters.'); return false; }
+            if (p !== c) { showAlert('Passwords do not match.'); return false; }
+            lockBtn('regBtn');
+            return true;
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  FORGOT PASSWORD FLOW
+        // ═══════════════════════════════════════════════════════
+        let cdTimer = null;
+
+        function showForgot() {
+            document.getElementById('authView').style.display = 'none';
+            document.getElementById('forgotView').style.display = 'block';
+            clearAlert();
+            goStep(1);
+        }
+        function hideForgot() {
+            document.getElementById('forgotView').style.display = 'none';
+            document.getElementById('authView').style.display = 'block';
+            clearAlert();
+            goStep(1);
+        }
+
+        function goStep(n) {
+            ['step1', 'step2', 'step3'].forEach((id, i) => {
+                document.getElementById(id).style.display = (i + 1 === n) ? 'block' : 'none';
+            });
+            ['dot1', 'dot2', 'dot3'].forEach((id, i) => {
+                const d = document.getElementById(id);
+                d.className = 'step-dot' + (i + 1 < n ? ' done' : i + 1 === n ? ' active' : '');
+            });
+            clearAlert();
+        }
+
+        // Step 1: Send OTP
+        function sendOTP(resend) {
+            const mobile = document.getElementById('mobileInput').value.trim();
+            if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
+                showAlert('Please enter a valid 10-digit mobile number.');
+                return;
+            }
+
+            showAlert('Sending OTP…', 'info');
+
+            const fd = new FormData();
+            fd.append('mobile', mobile);
+
+            fetch('/auth/forgot-password', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show OTP hint for demo
+                        const hint = document.getElementById('otpHint');
+                        hint.textContent = '🔐 Demo OTP: ' + data.otp + ' (In production, this would be sent via SMS)';
+                        hint.style.display = 'block';
+                        // Clear digits
+                        ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].forEach(id => document.getElementById(id).value = '');
+                        goStep(2);
+                        document.getElementById('o1').focus();
+                        startCountdown();
+                        if (!resend) showAlert(data.message, 'success');
+                        else showAlert('New OTP sent!', 'success');
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                })
+                .catch(() => showAlert('Network error. Please try again.', 'error'));
+        }
+
+        // Countdown + resend
+        function startCountdown() {
+            clearInterval(cdTimer);
+            let secs = 30;
+            const txt = document.getElementById('countdownTxt');
+            const link = document.getElementById('resendLink');
+            link.style.display = 'none';
+            txt.textContent = 'Resend in ' + secs + 's';
+            cdTimer = setInterval(() => {
+                secs--;
+                if (secs <= 0) {
+                    clearInterval(cdTimer);
+                    txt.textContent = 'Didn\'t receive it? ';
+                    link.style.display = 'inline';
+                } else {
+                    txt.textContent = 'Resend in ' + secs + 's';
+                }
+            }, 1000);
+        }
+
+        // OTP digit auto-focus
+        function otpNext(el, nextId) {
+            el.value = el.value.replace(/\D/g, '');
+            if (el.value && nextId) document.getElementById(nextId).focus();
+        }
+        function otpBack(e, prevId) {
+            if (e.key === 'Backspace' && !e.target.value) document.getElementById(prevId).focus();
+        }
+
+        // Step 2: Verify OTP
+        function verifyOTP() {
+            const code = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].map(id => document.getElementById(id).value).join('');
+            if (code.length < 6) { showAlert('Please enter the complete 6-digit OTP.'); return; }
+
+            showAlert('Verifying…', 'info');
+
+            const fd = new FormData();
+            fd.append('otp', code);
+
+            fetch('/auth/verify-otp', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        clearInterval(cdTimer);
+                        goStep(3);
+                        showAlert('OTP verified! Now set your new password.', 'success');
+                    } else {
+                        showAlert(data.message, 'error');
+                        ['o1', 'o2', 'o3', 'o4', 'o5', 'o6'].forEach(id => document.getElementById(id).value = '');
+                        document.getElementById('o1').focus();
+                    }
+                })
+                .catch(() => showAlert('Network error. Please try again.', 'error'));
+        }
+
+        // Step 3: Reset password
+        function resetPassword() {
+            const np = document.getElementById('newPw').value;
+            const cp = document.getElementById('confirmPw').value;
+            if (np.length < 6) { showAlert('Password must be at least 6 characters.'); return; }
+            if (np !== cp) { showAlert('Passwords do not match.'); return; }
+
+            showAlert('Saving new password…', 'info');
+
+            const fd = new FormData();
+            fd.append('new_password', np);
+            fd.append('confirm_password', cp);
+
+            fetch('/auth/reset-password', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    showAlert(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        setTimeout(() => { hideForgot(); switchTab('login'); }, 2000);
+                    }
+                })
+                .catch(() => showAlert('Network error. Please try again.', 'error'));
+        }
+
+        // newPw strength watcher (uses fill2/text2 for reset form)
+        document.getElementById('newPw') && document.getElementById('newPw').addEventListener('input', function () {
+            checkStr(this.value, 'strFill2', 'strText2');
+        });
+    </script>
+</body>
+
+</html>

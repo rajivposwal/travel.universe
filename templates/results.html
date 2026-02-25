@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results — ASRS Travel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="light">
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="window.location='/'"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <div class="header-actions">
+            <a href="/"><button class="btn btn-ghost"><i class="fas fa-arrow-left"></i> New Search</button></a>
+            <a href="{{ url_for('logout') }}"><button class="btn btn-danger">Logout</button></a>
+        </div>
+    </header>
+
+    <!-- Results Header -->
+    <div class="results-header">
+        <div>
+            <h1>
+                <span>{{ items|length }}</span>
+                {{ travel_type }}s Found
+            </h1>
+            <p style="color:var(--muted);font-weight:600;margin-top:6px;">
+                {{ source }} → {{ destination }} | {{ date }}
+            </p>
+            {% if s_coords and d_coords and travel_type != 'Hotel' %}
+            <p class="meta-info">
+                GPS [{{ s_coords[0] }}, {{ s_coords[1] }}] → [{{ d_coords[0] }}, {{ d_coords[1] }}]
+            </p>
+            {% endif %}
+        </div>
+        {% if travel_type != 'Hotel' %}
+        <div style="text-align:right">
+            <p style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;">
+                Great-Circle Distance</p>
+            <p style="font-size:34px;font-weight:900;">{{ distance }} <span style="font-size:16px">km</span></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ─── Transport Results (Flight / Train / Bus) ─── -->
+    {% if travel_type != 'Hotel' %}
+
+    {% set icons = {'Flight': 'fa-plane', 'Train': 'fa-train', 'Bus': 'fa-bus'} %}
+    {% set icon_class = icons[travel_type] %}
+
+    <div class="ticket-list">
+        {% for item in items %}
+        <div class="ticket-card">
+
+            <!-- Carrier -->
+            <div class="ticket-carrier">
+                <div class="carrier-label">{{ travel_type }} Provider</div>
+                <div class="carrier-name">{{ item.name }}</div>
+                <div class="carrier-id">{{ item.id }}</div>
+            </div>
+
+            <!-- Route -->
+            <div class="ticket-route">
+                <div class="city-time">
+                    <h3>{{ item.departure }}</h3>
+                    <span>{{ source }}</span>
+                </div>
+                <div class="route-line">
+                    <hr>
+                    <i class="fas {{ icon_class }} route-icon"></i>
+                    <span>{{ item.duration }}</span>
+                </div>
+                <div class="city-time">
+                    <h3>{{ item.arrival }}</h3>
+                    <span>{{ destination }}</span>
+                </div>
+            </div>
+
+            <!-- Class Info -->
+            <div class="ticket-class">
+                {{ item.tag }}<strong>{{ item.class }}</strong>
+            </div>
+
+            <!-- Price -->
+            <div class="ticket-price">
+                <div class="price-amt"><sup>₹</sup>{{ item.price|int }}</div>
+                <a href="/book?type={{ travel_type }}&name={{ item.name }}&id={{ item.id }}&dep={{ item.departure }}&arr={{ item.arrival }}&price={{ item.price|int }}&src={{ source }}&dst={{ destination }}&cls={{ item.class }}"
+                    style="display:block;margin-top:14px;">
+                    <button class="btn btn-primary" style="width:100%;">Select</button>
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- ─── Hotel Results ─────────────────────── -->
+    <div class="hotel-grid-wrapper">
+        {% for item in items %}
+        <div class="hotel-card">
+            <img src="{{ item.img }}" alt="{{ item.name }}" loading="lazy">
+            <div class="hotel-body">
+                <span class="hotel-badge">{% if item.rating >= 4.8 %}⭐ Top Rated{% else %}✔ Verified Stay{% endif
+                    %}</span>
+                <div class="hotel-name">{{ item.name }}</div>
+                <div class="hotel-room">{{ item.meta }}</div>
+                <div class="hotel-amenities">
+                    {% for a in item.amenities %}
+                    <span class="amenity-tag">{{ a }}</span>
+                    {% endfor %}
+                </div>
+                <div class="hotel-footer">
+                    <div>
+                        <div class="hotel-price">₹{{ item.price }}</div>
+                        <div class="per-night">per night</div>
+                    </div>
+                    <div>
+                        <div class="hotel-rating">★ {{ item.rating }}</div>
+                        <a href="/book?type=Hotel&name={{ item.name }}&id={{ item.id }}&price={{ item.price }}&dst={{ destination }}&cls={{ item.meta }}&rating={{ item.rating }}"
+                            style="display:block;margin-top:10px;">
+                            <button class="btn btn-primary">Book Stay</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ─── Destination Info ─────────────────── -->
+    {% if place %}
+    <div style="padding:40px 6%;">
+        <div class="search-card" style="margin:0;border-radius:22px;">
+            <p
+                style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:12px;">
+                Sector Intelligence — {{ destination }}</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;">
+                <div class="field"><label>Famous For</label>
+                    <p style="font-weight:700;margin-top:4px;">{{ place.famous }}</p>
+                </div>
+                <div class="field"><label>Local Food</label>
+                    <p style="font-weight:700;margin-top:4px;">{{ place.local_food }}</p>
+                </div>
+                <div class="field"><label>Best Time to Visit</label>
+                    <p style="font-weight:700;margin-top:4px;">{{ place.best_time }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ─── Rating ───────────────────────────── -->
+    <div class="rating-section">
+        <div class="rating-box">
+            <h3>Rate Your Experience</h3>
+            <p>How was your booking journey today?</p>
+            <div class="stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+            </div>
+            <button class="btn btn-primary" style="width:200px;">Submit Feedback</button>
+            <div class="rating-msg"></div>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 ASRS Travel</footer>
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+</body>
+
+</html>

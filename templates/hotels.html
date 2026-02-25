@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Hotels India — ASRS Travel</title>
+    <meta name="description"
+        content="Top budget hotels across India under Rs 10,000 per night. Curated stays in Delhi, Rajasthan, South India, and more.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='hotels.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="light">
+
+    <!-- ══ HEADER ══ -->
+    <header>
+        <div class="logo" onclick="window.location='/'" style="cursor:pointer;"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <nav class="header-nav">
+            <a href="/">Home</a>
+            <a href="/hotels" class="active">Budget Hotels</a>
+            <a href="/deals">Deals</a>
+        </nav>
+        <div class="header-actions">
+            {% if logged_in %}
+            <span class="user-chip"><i class="fas fa-user-circle"></i> {{ user_name }}</span>
+            <a href="/logout"><button class="btn btn-ghost">Logout</button></a>
+            {% else %}
+            <a href="/login"><button class="btn btn-primary">Login</button></a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- ══ HERO ══ -->
+    <section class="hotels-hero">
+        <div class="hotels-hero-inner">
+            <div class="htag">
+                <i class="fas fa-rupee-sign"></i> Best Value Picks 2026
+            </div>
+            <h1>Budget Hotels Across India</h1>
+            <p>Curated stays under <strong>₹10,000/night</strong> — handpicked for comfort, location &amp; value</p>
+            <div class="hero-stats">
+                <div class="hstat"><strong>{{ hotels | length }}</strong><span>Verified Hotels</span></div>
+                <div class="hstat-div"></div>
+                <div class="hstat"><strong>₹1,000</strong><span>Starting From</span></div>
+                <div class="hstat-div"></div>
+                <div class="hstat"><strong>12+</strong><span>Cities Covered</span></div>
+                <div class="hstat-div"></div>
+                <div class="hstat"><strong>4.1★</strong><span>Avg Guest Rating</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ FILTER BAR ══ -->
+    <div class="hotels-filter-bar">
+        <div class="filter-scroll">
+            <button class="hfilter active" data-filter="all" onclick="filterHotels(this,'all')">
+                <i class="fas fa-th"></i> All Hotels
+            </button>
+            <button class="hfilter" data-filter="Budget" onclick="filterHotels(this,'Budget')">
+                <i class="fas fa-wallet"></i> Budget
+            </button>
+            <button class="hfilter" data-filter="Value" onclick="filterHotels(this,'Value')">
+                <i class="fas fa-gem"></i> Best Value
+            </button>
+            <button class="hfilter" data-filter="Boutique" onclick="filterHotels(this,'Boutique')">
+                <i class="fas fa-star"></i> Boutique
+            </button>
+            <button class="hfilter" data-filter="Chain" onclick="filterHotels(this,'Chain')">
+                <i class="fas fa-building"></i> Chains
+            </button>
+            <div class="filter-sep"></div>
+            <button class="hfilter" data-region="north" onclick="filterRegion(this,'north')">
+                <i class="fas fa-map-marker-alt"></i> North India
+            </button>
+            <button class="hfilter" data-region="south" onclick="filterRegion(this,'south')">
+                <i class="fas fa-map-marker-alt"></i> South India
+            </button>
+            <button class="hfilter" data-region="rajasthan" onclick="filterRegion(this,'rajasthan')">
+                <i class="fas fa-map-marker-alt"></i> Rajasthan
+            </button>
+            <button class="hfilter" data-region="west" onclick="filterRegion(this,'west')">
+                <i class="fas fa-map-marker-alt"></i> West India
+            </button>
+            <button class="hfilter" data-region="central" onclick="filterRegion(this,'central')">
+                <i class="fas fa-map-marker-alt"></i> Central India
+            </button>
+        </div>
+        <!-- Sort -->
+        <div class="filter-sort">
+            <select id="sort-select" onchange="sortHotels(this.value)">
+                <option value="rating">Sort: Top Rated</option>
+                <option value="price_asc">Sort: Price Low-High</option>
+                <option value="price_desc">Sort: Price High-Low</option>
+                <option value="reviews">Sort: Most Reviewed</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ══ TIPS BANNER ══ -->
+    <div class="tips-banner">
+        <i class="fas fa-lightbulb tips-icon"></i>
+        <div class="tips-scroll" id="tips-scroll">
+            <span>
+                <strong>Pro Tip:</strong> Book 2-3 weeks in advance for best rates &nbsp;•&nbsp;
+                <strong>Off-season</strong> (Apr–Jun, Aug–Sep) cuts prices by up to 40% &nbsp;•&nbsp;
+                <strong>Ginger Hotels</strong> &amp; <strong>FabHotels</strong> offer reliable chains at competitive
+                prices &nbsp;•&nbsp;
+                Use <strong>MakeMyTrip</strong>, <strong>Booking.com</strong>, or <strong>Yatra</strong> to compare live
+                prices
+            </span>
+        </div>
+    </div>
+
+    <!-- ══ HOTELS GRID ══ -->
+    <main class="hotels-main">
+        <div class="hotels-results-count">
+            Showing <span id="count">{{ hotels | length }}</span> hotels
+        </div>
+
+        <div class="hotels-grid" id="hotels-grid">
+            {% for hotel in hotels %}
+            <article class="hotel-card-v2" data-category="{{ hotel.category }}" data-state="{{ hotel.state }}"
+                data-city="{{ hotel.city }}" data-rating="{{ hotel.rating }}" data-price="{{ hotel.price_min }}"
+                data-reviews="{{ hotel.reviews }}">
+
+                <!-- Photo -->
+                <div class="hcard-photo">
+                    <img src="https://picsum.photos/seed/{{ hotel.id }}/700/480"
+                        alt="{{ hotel.name }}" loading="lazy">
+                    <div class="hcard-tags">
+                        <span class="hbadge hbadge-{{ hotel.category | lower }}">{{ hotel.tag }}</span>
+                        {% if hotel.chain != 'Independent' %}
+                        <span class="hbadge hbadge-chain">{{ hotel.chain }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="hcard-stars">
+                        {% for i in range(hotel.stars) %}<i class="fas fa-star"></i>{% endfor %}
+                        {% for i in range(5 - hotel.stars) %}<i class="far fa-star"></i>{% endfor %}
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="hcard-body">
+                    <div class="hcard-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ hotel.area }}, {{ hotel.city }}, {{ hotel.state }}
+                    </div>
+                    <h2 class="hcard-name">{{ hotel.name }}</h2>
+                    <p class="hcard-desc">{{ hotel.description }}</p>
+
+                    <!-- Highlights -->
+                    <div class="hcard-highlights">
+                        {% for hl in hotel.highlights.split(',') %}
+                        <div class="hl-item"><i class="fas fa-check-circle"></i> {{ hl.strip() }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Amenities -->
+                    <div class="hcard-amenities">
+                        {% for am in hotel.amenities.split(',') %}
+                        {% if loop.index <= 5 %} <span class="ham-tag">{{ am.strip() }}</span>
+                            {% endif %}
+                            {% endfor %}
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="hcard-footer">
+                        <div class="hcard-rating-block">
+                            <div class="hcard-rating-num">{{ hotel.rating }}</div>
+                            <div class="hcard-rating-meta">
+                                <div class="rating-bar-wrap">
+                                    <div class="rating-bar" style="width: {{ ((hotel.rating - 3) / 2 * 100) | int }}%">
+                                    </div>
+                                </div>
+                                <span>{{ hotel.reviews | int }} reviews</span>
+                            </div>
+                        </div>
+                        <div class="hcard-price-block">
+                            <div class="hcard-price">₹{{ hotel.price_min | int }}</div>
+                            <div class="hcard-price-note">–₹{{ hotel.price_max | int }}/night</div>
+                            <a href="/book?type=Hotel&name={{ hotel.name | urlencode }}&id=HTL-{{ hotel.id }}&price={{ hotel.price_min }}&dst={{ hotel.city | urlencode }}&cls={{ hotel.area | urlencode }}&rating={{ hotel.rating }}"
+                                class="hcard-book-btn">
+                                Book Now <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Empty state -->
+        <div class="hotels-empty hidden" id="hotels-empty">
+            <i class="fas fa-search" style="font-size:56px;color:var(--muted);margin-bottom:20px;"></i>
+            <h3>No hotels match this filter</h3>
+            <p>Try selecting a different category or region.</p>
+            <button class="btn btn-primary" onclick="resetFilters()">Show All Hotels</button>
+        </div>
+    </main>
+
+    <!-- ══ BOOKING TIPS SECTION ══ -->
+    <section class="booking-guide">
+        <div class="guide-inner">
+            <h2><i class="fas fa-info-circle"></i> Smart Booking Tips for Under ₹10,000</h2>
+            <div class="guide-grid">
+                <div class="guide-card">
+                    <div class="guide-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <h3>Book in Advance</h3>
+                    <p>Plan 2–3 weeks ahead for the best rates. Last-minute bookings can cost 30–50% more during peak
+                        season.</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon"><i class="fas fa-sun"></i></div>
+                    <h3>Off-Season Travel</h3>
+                    <p>April–June and August–September are off-peak months. Prices drop significantly and destinations
+                        are crowd-free.</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>Compare on Apps</h3>
+                    <p>Use MakeMyTrip, Booking.com, Yatra, and Goibibo. Filter by price and guest rating to find the
+                        true best deal.</p>
+                </div>
+                <div class="guide-card">
+                    <div class="guide-icon"><i class="fas fa-building"></i></div>
+                    <h3>Trust the Chains</h3>
+                    <p>Ginger Hotels (Tata/IHCL), FabHotels, Treebo, and OYO Townhouse deliver consistent quality at
+                        budget prices across 50+ Indian cities.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>&copy; 2026 ASRS Travel — All rights reserved</footer>
+
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+    <script>
+        /* ─── Region map ────────────────────────────────── */
+        const REGIONS = {
+            north: ['Delhi', 'Punjab', 'Uttar Pradesh', 'Uttarakhand', 'Himachal Pradesh',
+                'Haryana', 'Jammu & Kashmir'],
+            south: ['Karnataka', 'Kerala', 'Tamil Nadu', 'Telangana', 'Andhra Pradesh'],
+            rajasthan: ['Rajasthan'],
+            west: ['Maharashtra', 'Gujarat', 'Goa'],
+            central: ['Madhya Pradesh', 'Chhattisgarh', 'Jharkhand', 'Bihar', 'Odisha'],
+        };
+
+        let activeCategory = 'all';
+        let activeRegion = null;
+        let sortMode = 'rating';
+
+        function getCards() {
+            return Array.from(document.querySelectorAll('.hotel-card-v2'));
+        }
+
+        /* ─── Filter by category ────────────────────────── */
+        function filterHotels(btn, cat) {
+            document.querySelectorAll('.hfilter[data-filter]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeCategory = cat;
+            // clear region
+            document.querySelectorAll('.hfilter[data-region]').forEach(b => b.classList.remove('active'));
+            activeRegion = null;
+            applyFilters();
+        }
+
+        /* ─── Filter by region ──────────────────────────── */
+        function filterRegion(btn, region) {
+            document.querySelectorAll('.hfilter[data-region]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeRegion = region;
+            // clear category
+            document.querySelectorAll('.hfilter[data-filter]').forEach(b => b.classList.remove('active'));
+            activeCategory = 'all';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const cards = getCards();
+            let visible = 0;
+
+            cards.forEach(c => {
+                const cat = c.dataset.category;
+                const state = c.dataset.state;
+                let show = true;
+
+                if (activeCategory !== 'all' && cat !== activeCategory) show = false;
+                if (activeRegion && !(REGIONS[activeRegion] || []).includes(state)) show = false;
+
+                c.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            document.getElementById('count').textContent = visible;
+            document.getElementById('hotels-empty').classList.toggle('hidden', visible > 0);
+            document.getElementById('hotels-grid').classList.toggle('hidden', visible === 0);
+        }
+
+        /* ─── Sort ──────────────────────────────────────── */
+        function sortHotels(mode) {
+            sortMode = mode;
+            const grid = document.getElementById('hotels-grid');
+            const cards = getCards();
+
+            cards.sort((a, b) => {
+                if (mode === 'rating') return b.dataset.rating - a.dataset.rating;
+                if (mode === 'price_asc') return a.dataset.price - b.dataset.price;
+                if (mode === 'price_desc') return b.dataset.price - a.dataset.price;
+                if (mode === 'reviews') return b.dataset.reviews - a.dataset.reviews;
+                return 0;
+            });
+
+            cards.forEach(c => grid.appendChild(c));
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('.hfilter').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-filter="all"]').classList.add('active');
+            activeCategory = 'all';
+            activeRegion = null;
+            applyFilters();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASRS Travel — Premium Global Bookings</title>
+    <meta name="description"
+        content="Book flights, trains, buses and hotels with ASRS Travel. Premium deals, lowest prices.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Welcome Overlay ─────────────────────── */
+        #welcome-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .4s;
+        }
+
+        #welcome-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            pointer-events: none;
+        }
+
+        .wc-card {
+            background: linear-gradient(145deg, #1a0f00, #2d1800);
+            border: 1px solid rgba(255, 159, 28, .3);
+            border-radius: 28px;
+            padding: 52px 60px 44px;
+            text-align: center;
+            max-width: 460px;
+            width: 90%;
+            box-shadow: 0 0 80px rgba(255, 159, 28, .25), 0 32px 80px rgba(0, 0, 0, .6);
+            animation: wc-pop .55s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        @keyframes wc-pop {
+            from {
+                transform: scale(.7) translateY(40px);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1
+            }
+        }
+
+        .wc-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #ff9f1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: 900;
+            color: #fff;
+            margin: 0 auto 22px;
+            box-shadow: 0 0 0 6px rgba(255, 159, 28, .25), 0 8px 32px rgba(255, 159, 28, .4);
+            animation: pulse-av 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-av {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px rgba(255, 159, 28, .25), 0 8px 32px rgba(255, 159, 28, .4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 14px rgba(255, 159, 28, .08), 0 8px 40px rgba(255, 159, 28, .55);
+            }
+        }
+
+        .wc-hello {
+            font-size: 13px;
+            font-weight: 800;
+            color: rgba(255, 159, 28, .8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .wc-name {
+            font-size: 34px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .wc-name em {
+            color: #ff9f1c;
+            font-style: normal;
+        }
+
+        .wc-sub {
+            font-size: 14px;
+            color: rgba(255, 255, 255, .5);
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .wc-btn {
+            font-size: 15px;
+            font-weight: 800;
+            padding: 13px 40px;
+            background: linear-gradient(135deg, #ff9f1c, #ff5500);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(255, 159, 28, .4);
+            transition: transform .18s, box-shadow .18s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: inherit;
+        }
+
+        .wc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(255, 159, 28, .55);
+        }
+
+        /* ── Avatar chip in header ────────────────── */
+        .user-avatar-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 14px 5px 5px;
+            background: rgba(255, 159, 28, .1);
+            border: 1.5px solid rgba(255, 159, 28, .25);
+            border-radius: 50px;
+        }
+
+        .ua-dot {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ff9f1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: #fff;
+            flex-shrink: 0;
+            animation: pulse-dot 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 159, 28, .45);
+            }
+
+            50% {
+                box-shadow: 0 0 0 7px rgba(255, 159, 28, 0);
+            }
+        }
+
+        .ua-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+        }
+
+        .ua-greeting {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .ua-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        /* ── Hero personalised badge ──────────────── */
+        .hero-user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 159, 28, .12);
+            border: 1px solid rgba(255, 159, 28, .35);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 7px 20px 7px 7px;
+            margin-bottom: 28px;
+            animation: badge-in .7s cubic-bezier(.34, 1.56, .64, 1) .35s both;
+        }
+
+        @keyframes badge-in {
+            from {
+                opacity: 0;
+                transform: translateX(-20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .hb-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #ff9f1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .hb-text {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .hb-text em {
+            color: #ff9f1c;
+            font-style: normal;
+        }
+
+        /* ── Guest Lock Modal ─────────────────────────────────── */
+        #guest-lock-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .7);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+
+        #guest-lock-modal.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .glm-card {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border: 1.5px solid rgba(255, 159, 28, .35);
+            border-radius: 24px;
+            padding: 44px 48px 36px;
+            text-align: center;
+            max-width: 420px;
+            width: 92%;
+            box-shadow: 0 0 60px rgba(255, 159, 28, .2), 0 24px 60px rgba(0, 0, 0, .5);
+            animation: glm-in .35s cubic-bezier(.34, 1.56, .64, 1) both;
+        }
+
+        @keyframes glm-in {
+            from {
+                transform: scale(.85) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .glm-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .glm-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .glm-sub {
+            font-size: 14px;
+            color: rgba(255, 255, 255, .55);
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .glm-sub strong {
+            color: #ff9f1c;
+        }
+
+        .glm-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .glm-btn-primary {
+            padding: 11px 28px;
+            background: linear-gradient(135deg, #ff9f1c, #ff5500);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform .15s, box-shadow .15s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .glm-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 159, 28, .4);
+        }
+
+        .glm-btn-ghost {
+            padding: 11px 28px;
+            background: transparent;
+            color: rgba(255, 255, 255, .7);
+            border: 1.5px solid rgba(255, 255, 255, .25);
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color .15s, color .15s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .glm-btn-ghost:hover {
+            border-color: #ff9f1c;
+            color: #ff9f1c;
+        }
+
+        .glm-close {
+            margin-top: 18px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, .3);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .glm-close:hover {
+            color: rgba(255, 255, 255, .6);
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <!-- ─── Guest Lock Modal ─────────────────────────── -->
+    {% if not logged_in %}
+    <div id="guest-lock-modal" role="dialog" aria-modal="true">
+        <div class="glm-card">
+            <span class="glm-icon">🔒</span>
+            <div class="glm-title">Sign In to Continue</div>
+            <div class="glm-sub">
+                You need to be signed in to <strong>book flights, hotels, trains or buses</strong>,
+                order food, or access deals.
+            </div>
+            <div class="glm-btns">
+                <a href="{{ url_for('login') }}" class="glm-btn-primary" id="glm-signin-btn">Sign In</a>
+                <a href="{{ url_for('login') }}?tab=register" class="glm-btn-ghost" id="glm-register-btn">Register
+                    Free</a>
+            </div>
+            <button class="glm-close" onclick="closeGuestModal()">✕ Continue browsing</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ─── Welcome Overlay (fires once on login) ─ -->
+    {% if just_logged_in %}
+    <canvas id="confetti-canvas"></canvas>
+    <div id="welcome-overlay" class="show">
+        <div class="wc-card">
+            <div class="wc-avatar" data-color="{{ avatar_color }}">{{ user_name[0].upper() }}</div>
+            <div class="wc-hello">Welcome aboard</div>
+            <div class="wc-name">Hey, <em>{{ user_name }}</em>!</div>
+            <div class="wc-sub">
+                Your ASRS Travel account is all set.<br>
+                Flights, hotels, trains &amp; buses — all at your fingertips. ✈️
+            </div>
+            <button class="wc-btn" onclick="closeWelcome()">
+                <i class="fas fa-rocket"></i> Let's Explore
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ─── Header ──────────────────────────── -->
+    <header>
+        <div class="logo"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <nav style="display:flex;gap:24px;align-items:center;">
+            <a href="/hotels" style="font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;">
+                <i class="fas fa-hotel"></i> Budget Hotels
+            </a>
+            <a href="/food" style="font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;">
+                <i class="fas fa-utensils"></i> Food Menu
+            </a>
+        </nav>
+        <div class="header-actions">
+            {% if logged_in %}
+            <a href="{{ url_for('profile') }}" title="My Profile" style="text-decoration:none;">
+                <div class="user-avatar-chip">
+                    <div class="ua-dot" data-color="{{ avatar_color }}">{{ user_name[0].upper() }}</div>
+                    <div class="ua-info">
+                        <span class="ua-greeting">My Profile</span>
+                        <span class="ua-name">{{ user_name }}</span>
+                    </div>
+                </div>
+            </a>
+            <a href="{{ url_for('deals') }}"><button class="btn btn-ghost">My Deals</button></a>
+            <a href="{{ url_for('logout') }}"><button class="btn btn-danger">Logout</button></a>
+            {% else %}
+            <a href="{{ url_for('login') }}"><button class="btn btn-primary">Login</button></a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- ─── Hero ──────────────────────────────── -->
+    <section class="hero">
+        <div class="hero-content">
+            {% if logged_in %}
+            <div class="hero-user-badge">
+                <div class="hb-dot" data-color="{{ avatar_color }}">{{ user_name[0].upper() }}</div>
+                <div class="hb-text">Welcome back, <em>{{ user_name }}</em> 👋</div>
+            </div>
+            {% endif %}
+            <h1>WHERE ADVENTURE<br>AWAITS</h1>
+            <p>Flights · Hotels · Trains · Buses · 🍽️ Food</p>
+        </div>
+    </section>
+
+    <!-- ─── Search Card ──────────────────────── -->
+    <div class="search-card">
+
+        <!-- Category Tabs -->
+        <div class="cat-tabs">
+            <button class="cat-tab active" data-target="flight"><i class="fas fa-plane"></i> Flights</button>
+            <button class="cat-tab" data-target="hotel"><i class="fas fa-hotel"></i> Hotels</button>
+            <button class="cat-tab" data-target="train"><i class="fas fa-train"></i> Trains</button>
+            <button class="cat-tab" data-target="bus"><i class="fas fa-bus"></i> Buses</button>
+            <button class="cat-tab" data-target="food"><i class="fas fa-utensils"></i> Food</button>
+        </div>
+
+        <!-- Flight Pane -->
+        <div id="flight-pane" class="tab-pane">
+            <form class="booking-form" action="{{ url_for('search') }}" method="POST">
+                <input type="hidden" name="travel_type" value="Flight">
+                <div class="field">
+                    <label>From</label>
+                    <input type="text" id="fl-src" name="source" placeholder="e.g. Delhi" required>
+                    <i class="fas fa-crosshairs locate-icon"
+                        style="float:right;color:var(--accent);cursor:pointer;margin-top:-20px;"
+                        onclick="locateCity('fl-src')"></i>
+                </div>
+                <div class="field">
+                    <label>To</label>
+                    <input type="text" id="fl-dst" name="destination" placeholder="e.g. Mumbai" required>
+                </div>
+                <div class="field">
+                    <label>Departure</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="field">
+                    <label>Travellers</label>
+                    <select name="passengers">
+                        <option>1 Adult, Economy</option>
+                        <option>2 Adults, Economy</option>
+                        <option>1 Adult, Business</option>
+                    </select>
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Hotel Pane -->
+        <div id="hotel-pane" class="tab-pane hidden">
+            <form class="booking-form" action="{{ url_for('search') }}" method="POST">
+                <input type="hidden" name="travel_type" value="Hotel">
+                <input type="hidden" name="source" value="Hotel Search">
+                <div class="field" style="grid-column: span 2">
+                    <label>City / Destination</label>
+                    <input type="text" name="destination" placeholder="e.g. Goa" required>
+                </div>
+                <div class="field">
+                    <label>Check-In</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="field">
+                    <label>Guests</label>
+                    <select name="guests">
+                        <option>1 Room, 1 Adult</option>
+                        <option>1 Room, 2 Adults</option>
+                        <option>2 Rooms, 4 Adults</option>
+                    </select>
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Train Pane -->
+        <div id="train-pane" class="tab-pane hidden">
+            <form class="booking-form" action="{{ url_for('search') }}" method="POST">
+                <input type="hidden" name="travel_type" value="Train">
+                <div class="field">
+                    <label>From</label>
+                    <input type="text" id="tr-src" name="source" placeholder="e.g. Kolkata" required>
+                    <i class="fas fa-crosshairs locate-icon"
+                        style="float:right;color:var(--accent);cursor:pointer;margin-top:-20px;"
+                        onclick="locateCity('tr-src')"></i>
+                </div>
+                <div class="field">
+                    <label>To</label>
+                    <input type="text" name="destination" placeholder="e.g. Chennai" required>
+                </div>
+                <div class="field">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="field">
+                    <label>Class</label>
+                    <select name="quota">
+                        <option>All Classes</option>
+                        <option>Sleeper (SL)</option>
+                        <option>3A AC</option>
+                        <option>2A AC</option>
+                    </select>
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bus Pane -->
+        <div id="bus-pane" class="tab-pane hidden">
+            <form class="booking-form" action="{{ url_for('search') }}" method="POST">
+                <input type="hidden" name="travel_type" value="Bus">
+                <div class="field">
+                    <label>From</label>
+                    <input type="text" id="bs-src" name="source" placeholder="e.g. Pune" required>
+                    <i class="fas fa-crosshairs locate-icon"
+                        style="float:right;color:var(--accent);cursor:pointer;margin-top:-20px;"
+                        onclick="locateCity('bs-src')"></i>
+                </div>
+                <div class="field">
+                    <label>To</label>
+                    <input type="text" name="destination" placeholder="e.g. Mumbai" required>
+                </div>
+                <div class="field">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="field">
+                    <label>Bus Type</label>
+                    <select name="bus_type">
+                        <option>AC Sleeper</option>
+                        <option>Volvo AC</option>
+                        <option>Non-AC</option>
+                    </select>
+                </div>
+                <div class="field submit-field">
+                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Food Pane -->
+        <div id="food-pane" class="tab-pane hidden">
+            <div style="text-align:center;padding:32px 20px;">
+                <div style="font-size:56px;margin-bottom:12px;">🍽️</div>
+                <h2 style="font-weight:900;font-size:22px;color:var(--text);margin-bottom:8px;">Explore Our Full Food
+                    Menu</h2>
+                <p style="color:var(--muted);font-size:14px;margin-bottom:24px;">Continental · Indian · Desserts · 120+
+                    items from ₹40</p>
+                <a href="/food">
+                    <button class="btn-search" style="width:auto;padding:14px 40px;font-size:15px;">
+                        <i class="fas fa-utensils"></i> &nbsp;Open Food Menu
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Promotions ──────────────────────── -->
+    <p class="section-label">Exclusive Deals</p>
+    <div class="promos">
+        <div class="promo-card">
+            <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80"
+                alt="Flights">
+            <div class="promo-overlay">
+                <p>✈ Flat 20% OFF on First Flight</p>
+            </div>
+        </div>
+        <div class="promo-card">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
+                alt="Hotels">
+            <div class="promo-overlay">
+                <p>🏨 Luxury Hotels from ₹1,999</p>
+            </div>
+        </div>
+        <div class="promo-card">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"
+                alt="Goa">
+            <div class="promo-overlay">
+                <p>🌊 Goa Holidays – Best Deals</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 ASRS Travel — All rights reserved</footer>
+
+    <button id="theme-toggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+    <style>
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px var(--shadow);
+            z-index: 9999;
+            overflow: hidden;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(255, 159, 28, 0.07);
+        }
+
+        .ac-city {
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .ac-state {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .ac-iata {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(255, 159, 28, 0.12);
+            color: var(--accent);
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+    </style>
+    <script>
+        function buildAutocomplete(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'autocomplete-wrapper';
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+
+            const list = document.createElement('div');
+            list.className = 'autocomplete-list';
+            list.style.display = 'none';
+            wrapper.appendChild(list);
+
+            input.addEventListener('input', async () => {
+                const q = input.value.trim();
+                if (q.length < 1) { list.style.display = 'none'; return; }
+                const res = await fetch(`/api/cities?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                list.innerHTML = '';
+                if (!data.length) { list.style.display = 'none'; return; }
+                data.forEach(city => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.innerHTML = `
+            <div><div class="ac-city">${city.city}</div><div class="ac-state">${city.state}</div></div>
+            <span class="ac-iata">${city.iata_code}</span>`;
+                    item.addEventListener('click', () => {
+                        input.value = city.city;
+                        list.style.display = 'none';
+                    });
+                    list.appendChild(item);
+                });
+                list.style.display = 'block';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) list.style.display = 'none';
+            });
+        }
+
+        // Attach to all flight city inputs after DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            buildAutocomplete('fl-src');
+            buildAutocomplete('fl-dst');
+        });
+    </script>
+
+    {% if just_logged_in %}
+    <script>
+        (function () {
+            var canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.addEventListener('resize', function () {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+            var COLORS = ['#ff9f1c', '#ff5500', '#2ec4b6', '#7209b7', '#3a86ff', '#ff006e', '#ffbe0b', '#06d6a0'];
+            var pieces = [];
+            for (var i = 0; i < 140; i++) {
+                pieces.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight - window.innerHeight,
+                    w: Math.random() * 10 + 6, h: Math.random() * 6 + 4,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    vx: (Math.random() - .5) * 3, vy: Math.random() * 3 + 2,
+                    angle: Math.random() * 360, spin: (Math.random() - .5) * 8
+                });
+            }
+            var running = true;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var i = 0; i < pieces.length; i++) {
+                    var p = pieces[i];
+                    ctx.save(); ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y); ctx.rotate(p.angle * Math.PI / 180);
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+                    p.x += p.vx; p.y += p.vy; p.angle += p.spin;
+                    if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+                }
+                if (running) requestAnimationFrame(draw);
+            }
+            draw();
+            setTimeout(function () { running = false; ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
+        })();
+
+        function closeWelcome() {
+            var ov = document.getElementById('welcome-overlay');
+            if (!ov) return;
+            ov.style.opacity = '0';
+            setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 420);
+        }
+        var _ov = document.getElementById('welcome-overlay');
+        if (_ov) _ov.addEventListener('click', function (e) { if (e.target === _ov) closeWelcome(); });
+    </script>
+    {% endif %}
+
+</body>
+
+<!-- Apply avatar colors from data-color attribute (avoids Jinja2-in-CSS linter errors) -->
+<script>
+    document.querySelectorAll('[data-color]').forEach(function (el) {
+        el.style.background = el.getAttribute('data-color');
+    });
+</script>
+
+{% if not logged_in %}
+<!-- Guest Lock: intercept booking actions for unauthenticated users -->
+<script>
+    (function () {
+        var modal = document.getElementById('guest-lock-modal');
+        if (!modal) return;
+
+        function openGuestModal() {
+            modal.classList.add('open');
+            modal.focus();
+        }
+        window.closeGuestModal = function () {
+            modal.classList.remove('open');
+        };
+
+        // Close on backdrop click
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeGuestModal();
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeGuestModal();
+        });
+
+        // ── 1. Intercept ALL booking form submits ──────────────────────
+        document.querySelectorAll('.booking-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                openGuestModal();
+            });
+        });
+
+        // ── 2. Lock the Food tab click ─────────────────────────────────
+        var foodTab = document.querySelector('.cat-tab[data-target="food"]');
+        if (foodTab) {
+            foodTab.addEventListener('click', function (e) {
+                e.stopImmediatePropagation();
+                openGuestModal();
+            }, true);
+        }
+
+        // ── 3. Lock nav links: Hotels, Deals, Food page links ─────────
+        var lockedLinks = ['/food', '/hotels', '/deals'];
+        document.querySelectorAll('a').forEach(function (a) {
+            var href = a.getAttribute('href') || '';
+            if (lockedLinks.some(function (p) { return href === p || href.startsWith(p + '?'); })) {
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openGuestModal();
+                });
+            }
+        });
+    })();
+</script>
+{% endif %}
+
+</html>

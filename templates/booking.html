@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select & Pay — ASRS Travel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='booking.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-theme="light">
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="history.back()" style="cursor:pointer;"><i
+                class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <div class="header-actions">
+            <a href="/"><button class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</button></a>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-step active" id="step-ind-1">
+            <div class="step-bubble">1</div>
+            <span>{% if type == 'Hotel' %}Choose Room{% else %}Choose Seat{% endif %}</span>
+        </div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" id="step-ind-2">
+            <div class="step-bubble">2</div>
+            <span>Review Order</span>
+        </div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" id="step-ind-3">
+            <div class="step-bubble">3</div>
+            <span>Payment</span>
+        </div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" id="step-ind-4">
+            <div class="step-bubble"><i class="fas fa-check"></i></div>
+            <span>Confirmed</span>
+        </div>
+    </div>
+
+    <!-- Booking Ticket Summary Bar -->
+    <div class="booking-summary-bar">
+        <div class="bsb-left">
+            {% if type == 'Flight' %}<i class="fas fa-plane bsb-icon"></i>
+            {% elif type == 'Train' %}<i class="fas fa-train bsb-icon"></i>
+            {% elif type == 'Bus' %}<i class="fas fa-bus bsb-icon"></i>
+            {% else %}<i class="fas fa-hotel bsb-icon"></i>{% endif %}
+            <div>
+                <div class="bsb-type">{{ type }}</div>
+                <div class="bsb-name">{{ name }}</div>
+            </div>
+        </div>
+        <div class="bsb-route">
+            {% if type != 'Hotel' %}
+            <div class="bsb-city">{{ src }}</div>
+            <div class="bsb-arrow">
+                <span>{{ dep }} → {{ arr }}</span>
+            </div>
+            <div class="bsb-city">{{ dst }}</div>
+            {% else %}
+            <div class="bsb-city">{{ dst }}</div>
+            <div class="bsb-arrow"><span>{{ cls }}</span></div>
+            {% endif %}
+        </div>
+        <div class="bsb-right">
+            <div class="bsb-label">Base Price</div>
+            <div class="bsb-price">₹{{ price }}</div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 1: SEAT / ROOM SELECTION ═══ -->
+    <div class="book-step" id="step-1">
+        <div class="book-container">
+
+            {% if type == 'Flight' %}
+            <!-- ─── AIRPLANE SEAT MAP ─── -->
+            <h2 class="step-title"><i class="fas fa-plane"></i> Select Your Seat</h2>
+            <p class="step-sub">{{ src }} → {{ dst }} &nbsp;|&nbsp; {{ cls }}</p>
+
+            <div class="seat-legend">
+                <div class="legend-item">
+                    <div class="seat available"></div> Available
+                </div>
+                <div class="legend-item">
+                    <div class="seat occupied"></div> Occupied
+                </div>
+                <div class="legend-item">
+                    <div class="seat selected"></div> Your Pick
+                </div>
+                <div class="legend-item">
+                    <div class="seat window"></div> Window
+                </div>
+            </div>
+
+            <div class="airplane-wrapper">
+                <div class="plane-nose"></div>
+                <div class="seat-map" id="seat-map">
+                    <!-- Class Header -->
+                    <div class="class-label">Business Class</div>
+                    {% for row in range(1, 5) %}
+                    <div class="seat-row">
+                        <span class="row-num">{{ row }}</span>
+                        {% for col in ['A','B'] %}
+                        <div class="seat {% if loop.first %}window{% else %}aisle{% endif %} {% if (row == 2 and col == 'B') or (row == 3 and col == 'A') %}occupied{% else %}available{% endif %}"
+                            data-seat="{{ row }}{{ col }}" data-price="{{ price + 1500 }}">{{ row }}{{ col }}</div>
+                        {% endfor %}
+                        <div class="seat-gap"></div>
+                        {% for col in ['C','D'] %}
+                        <div class="seat {% if loop.last %}window{% else %}aisle{% endif %} {% if (row == 1 and col == 'C') %}occupied{% else %}available{% endif %}"
+                            data-seat="{{ row }}{{ col }}" data-price="{{ price + 1500 }}">{{ row }}{{ col }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="class-label">Economy Class</div>
+                    {% for row in range(5, 25) %}
+                    <div class="seat-row">
+                        <span class="row-num">{{ row }}</span>
+                        {% for col in ['A','B','C'] %}
+                        <div class="seat {% if col == 'A' %}window{% elif col == 'C' %}aisle{% endif %} {% if [10,11,14,17,19,21] | select('equalto', row) | list %}occupied{% else %}available{% endif %}"
+                            data-seat="{{ row }}{{ col }}" data-price="{{ price }}">{{ row }}{{ col }}</div>
+                        {% endfor %}
+                        <div class="seat-gap"></div>
+                        {% for col in ['D','E','F'] %}
+                        <div class="seat {% if col == 'F' %}window{% elif col == 'D' %}aisle{% endif %} {% if [9,13,15,18,20,22] | select('equalto', row) | list %}occupied{% else %}available{% endif %}"
+                            data-seat="{{ row }}{{ col }}" data-price="{{ price }}">{{ row }}{{ col }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="plane-tail"></div>
+            </div>
+
+            {% elif type == 'Train' %}
+            <!-- ─── TRAIN BERTH MAP ─── -->
+            <h2 class="step-title"><i class="fas fa-train"></i> Select Your Berth</h2>
+            <p class="step-sub">Train: {{ name }} &nbsp;|&nbsp; {{ cls }}</p>
+
+            <div class="seat-legend">
+                <div class="legend-item">
+                    <div class="seat available"></div> Available
+                </div>
+                <div class="legend-item">
+                    <div class="seat occupied"></div> Booked
+                </div>
+                <div class="legend-item">
+                    <div class="seat selected"></div> Selected
+                </div>
+            </div>
+
+            <div class="train-wrapper">
+                {% for coach in range(1, 4) %}
+                <div class="coach-block">
+                    <div class="coach-label">Coach {{ ['B1','B2','B3'][coach-1] }}</div>
+                    <div class="berth-grid">
+                        {% for section in range(1, 10) %}
+                        <div class="berth-section">
+                            <div class="berth-section-num">{{ section }}</div>
+                            {% for berth in ['LB','MB','UB','SL','SU'] %}
+                            {% set s_id = coach ~ '-' ~ section ~ '-' ~ berth %}
+                            <div class="berth-box {% if (coach==1 and section==3 and berth=='LB') or (coach==2 and section==5 and berth=='UB') or (coach==1 and section==7 and berth=='MB') %}occupied{% else %}available{% endif %}"
+                                data-seat="{{ s_id }}"
+                                data-price="{{ price + ({'LB':0,'MB':0,'UB':-200,'SL':100,'SU':80}[berth]) }}">
+                                <span class="berth-label">{{ berth }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif type == 'Bus' %}
+            <!-- ─── BUS SEAT MAP ─── -->
+            <h2 class="step-title"><i class="fas fa-bus"></i> Select Your Seat</h2>
+            <p class="step-sub">Bus: {{ name }} &nbsp;|&nbsp; {{ cls }}</p>
+
+            <div class="seat-legend">
+                <div class="legend-item">
+                    <div class="seat available"></div> Available
+                </div>
+                <div class="legend-item">
+                    <div class="seat occupied"></div> Booked
+                </div>
+                <div class="legend-item">
+                    <div class="seat selected"></div> Selected
+                </div>
+                <div class="legend-item">
+                    <div class="seat ladies"></div> Ladies
+                </div>
+            </div>
+
+            <div class="bus-wrapper">
+                <div class="bus-body">
+                    <div class="driver-area"><i class="fas fa-steering-wheel"></i> Driver</div>
+                    <div class="bus-seats" id="seat-map">
+                        {% for row in range(1, 12) %}
+                        <div class="seat-row bus-row">
+                            <div class="seat {% if row in [1,2] %}ladies{% elif row in [4,7,9] %}occupied{% else %}available{% endif %}"
+                                data-seat="{{ row }}A" data-price="{{ price }}">{{ row }}A</div>
+                            <div class="seat {% if row in [5,8] %}occupied{% else %}available{% endif %}"
+                                data-seat="{{ row }}B" data-price="{{ price }}">{{ row }}B</div>
+                            <div class="bus-aisle"></div>
+                            <div class="seat {% if row in [3,6] %}occupied{% else %}available{% endif %}"
+                                data-seat="{{ row }}C" data-price="{{ price }}">{{ row }}C</div>
+                            <div class="seat {% if row in [10] %}occupied{% else %}available{% endif %}"
+                                data-seat="{{ row }}D" data-price="{{ price }}">{{ row }}D</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- ─── HOTEL ROOM CHOOSER ─── -->
+            <h2 class="step-title"><i class="fas fa-hotel"></i> Choose Your Room</h2>
+            <p class="step-sub">{{ name }} — {{ dst }}</p>
+
+            <div class="rooms-grid">
+                {% set room_types = [
+                {"name": "Standard Room", "size": "22 m²", "bed": "1 Queen Bed", "img": "1566073771", "price": price,
+                "features": ["Free WiFi", "TV", "AC"]},
+                {"name": "Deluxe Suite", "size": "38 m²", "bed": "1 King Bed", "img": "1578894168", "price": price+1500,
+                "features": ["Free WiFi", "Mini Bar", "AC", "Balcony"]},
+                {"name": "Premium Vista Room", "size": "30 m²", "bed": "2 Double Beds", "img": "1525193707", "price":
+                price+800, "features": ["Free WiFi", "Pool View", "AC", "Bathtub"]},
+                {"name": "Heritage Presidential","size": "65 m²", "bed": "1 Emperor Bed", "img": "1414005700", "price":
+                price+4000, "features": ["Butler", "Private Pool", "Spa", "All Inclusive"]}
+                ] %}
+                {% for room in room_types %}
+                <div class="room-card" data-price="{{ room.price }}" data-room="{{ room.name }}"
+                    onclick="selectRoom(this)">
+                    <img src="https://picsum.photos/seed/room{{ loop.index }}/600/400" alt="{{ room.name }}">
+                    <div class="room-body">
+                        <div class="room-name">{{ room.name }}</div>
+                        <div class="room-meta">
+                            <span><i class="fas fa-ruler-combined"></i> {{ room.size }}</span>
+                            <span><i class="fas fa-bed"></i> {{ room.bed }}</span>
+                        </div>
+                        <div class="room-features">
+                            {% for f in room.features %}<span class="amenity-tag">{{ f }}</span>{% endfor %}
+                        </div>
+                        <div class="room-footer">
+                            <div class="room-price">₹{{ room.price }}<span>/night</span></div>
+                            <button class="btn btn-ghost room-select-btn">Select Room</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Selection Status Bar -->
+            <div class="selection-status" id="selection-status">
+                <div class="sel-left">
+                    <i class="fas fa-ticket-alt sel-icon"></i>
+                    <div>
+                        <div id="sel-label">No {% if type == 'Hotel' %}room{% else %}seat{% endif %} selected yet</div>
+                        <div id="sel-detail" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+                    </div>
+                </div>
+                <div class="sel-right">
+                    <div class="sel-price" id="sel-price">₹—</div>
+                    <button class="btn btn-primary" id="btn-next-1" onclick="goToStep(2)" disabled>
+                        Continue <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 2: ORDER REVIEW ═══ -->
+    <div class="book-step hidden" id="step-2">
+        <div class="book-container">
+            <h2 class="step-title"><i class="fas fa-receipt"></i> Review Your Order</h2>
+
+            <div class="review-card">
+                <div class="review-row">
+                    <span class="review-label">Travel Type</span>
+                    <span class="review-value">{{ type }}</span>
+                </div>
+                <div class="review-row">
+                    <span class="review-label">Provider</span>
+                    <span class="review-value">{{ name }}</span>
+                </div>
+                {% if type != 'Hotel' %}
+                <div class="review-row">
+                    <span class="review-label">Route</span>
+                    <span class="review-value">{{ src }} → {{ dst }}</span>
+                </div>
+                <div class="review-row">
+                    <span class="review-label">Departure / Arrival</span>
+                    <span class="review-value">{{ dep }} — {{ arr }}</span>
+                </div>
+                <div class="review-row">
+                    <span class="review-label">Class</span>
+                    <span class="review-value">{{ cls }}</span>
+                </div>
+                {% else %}
+                <div class="review-row">
+                    <span class="review-label">Destination</span>
+                    <span class="review-value">{{ dst }}</span>
+                </div>
+                {% endif %}
+                <div class="review-row" id="review-seat-row" style="display:none;">
+                    <span class="review-label">{% if type == 'Hotel' %}Room{% else %}Seat{% endif %}</span>
+                    <span class="review-value" id="review-seat-val">—</span>
+                </div>
+                <div class="review-divider"></div>
+                <div class="review-row total-row">
+                    <span class="review-label">Total Amount</span>
+                    <span class="review-value total-price" id="review-total">₹{{ price }}</span>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn btn-ghost" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary" onclick="goToStep(3)">Proceed to Payment <i
+                        class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 3: PAYMENT ═══ -->
+    <div class="book-step hidden" id="step-3">
+        <div class="book-container">
+            <h2 class="step-title"><i class="fas fa-lock"></i> Secure Payment</h2>
+
+            <!-- Order Total Banner -->
+            <div class="payment-total-bar">
+                <span>Amount to Pay</span>
+                <span class="pay-amount" id="pay-amount-display">₹{{ price }}</span>
+            </div>
+
+            <!-- Payment Method Selector -->
+            <div class="payment-methods">
+                <div class="pay-method active" onclick="selectPayment(this,'upi')" data-method="upi">
+                    <div class="pay-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div class="pay-label">UPI / Online</div>
+                    <div class="pay-sub">GPay, PhonePe, Paytm</div>
+                </div>
+                <div class="pay-method" onclick="selectPayment(this,'card')" data-method="card">
+                    <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                    <div class="pay-label">Debit / Credit Card</div>
+                    <div class="pay-sub">Visa, Mastercard, RuPay</div>
+                </div>
+                <div class="pay-method" onclick="selectPayment(this,'cash')" data-method="cash">
+                    <div class="pay-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="pay-label">Cash at Counter</div>
+                    <div class="pay-sub">Pay at ticket window</div>
+                </div>
+            </div>
+
+            <!-- UPI Panel -->
+            <div class="pay-panel" id="panel-upi">
+                <div class="upi-apps">
+                    <button class="upi-btn" onclick="selectUPI(this)"><img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Paytm_Logo_%28standalone%29.svg/120px-Paytm_Logo_%28standalone%29.svg.png"
+                            alt="Paytm">Paytm</button>
+                    <button class="upi-btn" onclick="selectUPI(this)"><img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/120px-Google_Pay_Logo.svg.png"
+                            alt="GPay">Google Pay</button>
+                    <button class="upi-btn" onclick="selectUPI(this)"><img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/120px-PhonePe_Logo.svg.png"
+                            alt="PhonePe">PhonePe</button>
+                </div>
+                <div class="pay-field-group" style="margin-top:20px;">
+                    <div class="pay-field">
+                        <label>Enter UPI ID</label>
+                        <input type="text" placeholder="yourname@upi" id="upi-id">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Panel -->
+            <div class="pay-panel hidden" id="panel-card">
+                <div class="card-visual" id="card-visual">
+                    <div class="card-chip"><i class="fas fa-sim-card"></i></div>
+                    <div class="card-number" id="cv-num">•••• •••• •••• ••••</div>
+                    <div class="card-bottom">
+                        <div>
+                            <div class="cv-label">Card Holder</div>
+                            <div id="cv-name">YOUR NAME</div>
+                        </div>
+                        <div>
+                            <div class="cv-label">Expires</div>
+                            <div id="cv-exp">MM/YY</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pay-field-group">
+                    <div class="pay-field" style="grid-column:span 2">
+                        <label>Card Number</label>
+                        <input type="tel" maxlength="19" placeholder="1234 5678 9012 3456" id="card-num"
+                            oninput="fmtCard(this)">
+                    </div>
+                    <div class="pay-field" style="grid-column:span 2">
+                        <label>Card Holder Name</label>
+                        <input type="text" placeholder="Name on card" id="card-name"
+                            oninput="document.getElementById('cv-name').textContent=this.value.toUpperCase()||'YOUR NAME'">
+                    </div>
+                    <div class="pay-field">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="tel" maxlength="5" placeholder="MM/YY" id="card-exp" oninput="fmtExpiry(this)">
+                    </div>
+                    <div class="pay-field">
+                        <label>CVV</label>
+                        <input type="password" maxlength="3" placeholder="•••" id="card-cvv">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cash Panel -->
+            <div class="pay-panel hidden" id="panel-cash">
+                <div class="cash-info">
+                    <i class="fas fa-info-circle" style="font-size:40px;color:var(--accent);margin-bottom:16px;"></i>
+                    <h3>Pay at the Counter</h3>
+                    <p>Your booking will be reserved for <strong>30 minutes</strong>. Please visit the nearest ASRS
+                        counter and present your booking reference to complete payment.</p>
+                    <div class="cash-ref-box">Booking Ref: <strong>KNY-{{ range(100000,999999)|random }}</strong></div>
+                </div>
+            </div>
+
+            <div class="step-actions" style="margin-top:32px;">
+                <button class="btn btn-ghost" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary pay-btn" onclick="processPayment()">
+                    <i class="fas fa-lock"></i> Pay & Confirm Booking
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 4: CONFIRMATION ═══ -->
+    <div class="book-step hidden" id="step-4">
+        <div class="book-container">
+            <div class="confirmation-box">
+                <div class="confirm-anim">
+                    <div class="confirm-circle">
+                        <i class="fas fa-check confirm-check"></i>
+                    </div>
+                </div>
+                <h2 class="confirm-title">Booking Confirmed!</h2>
+                <p class="confirm-sub">Your journey has been successfully booked.</p>
+
+                <div class="confirm-details">
+                    <div class="confirm-row"><span>Booking ID</span><strong id="confirm-id"></strong></div>
+                    <div class="confirm-row"><span>Traveller</span><strong>{{ session_user }}</strong></div>
+                    <div class="confirm-row"><span>{{ type }}</span><strong>{{ name }}</strong></div>
+                    {% if type != 'Hotel' %}
+                    <div class="confirm-row"><span>Route</span><strong>{{ src }} → {{ dst }}</strong></div>
+                    <div class="confirm-row"><span>Timings</span><strong>{{ dep }} — {{ arr }}</strong></div>
+                    {% else %}
+                    <div class="confirm-row"><span>Destination</span><strong>{{ dst }}</strong></div>
+                    {% endif %}
+                    <div class="confirm-row"><span>Seat / Room</span><strong id="confirm-seat"></strong></div>
+                    <div class="confirm-row"><span>Amount Paid</span><strong id="confirm-amount"></strong></div>
+                    <div class="confirm-row"><span>Payment</span><strong id="confirm-payment"></strong></div>
+                </div>
+
+                <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:36px;">
+                    <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-download"></i> Download
+                        Ticket</button>
+                    <a href="/"><button class="btn btn-ghost"><i class="fas fa-home"></i> Back to Home</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+    <script>
+        /* ─── State ─────────────────────────── */
+        let selectedSeat = null;
+        let selectedPrice = parseInt("{{ price }}");
+        let selectedPayMethod = 'upi';
+
+        /* ─── Seat Selection ─────────────────── */
+        document.querySelectorAll('.seat.available, .seat.window, .seat.ladies, .berth-box.available, .berth-box.ladies').forEach(s => {
+            s.addEventListener('click', () => {
+                document.querySelectorAll('.seat.selected, .berth-box.selected').forEach(x => {
+                    x.classList.remove('selected');
+                    const prev = x.classList.contains('window') || x.classList.contains('ladies');
+                    if (!prev) x.classList.add('available');
+                });
+                s.classList.add('selected');
+                selectedSeat = s.dataset.seat;
+                selectedPrice = parseInt(s.dataset.price);
+                updateSelectionBar();
+            });
+        });
+
+        /* ─── Room Selection ─────────────────── */
+        window.selectRoom = (card) => {
+            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('room-picked'));
+            card.classList.add('room-picked');
+            selectedSeat = card.dataset.room;
+            selectedPrice = parseInt(card.dataset.price);
+            updateSelectionBar();
+        };
+
+        function updateSelectionBar() {
+            document.getElementById('sel-label').textContent = '{{ type == "Hotel" and "Room" or "Seat" }}: ' + selectedSeat;
+            document.getElementById('sel-detail').textContent = 'Tap "Continue" to proceed';
+            document.getElementById('sel-price').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+            document.getElementById('btn-next-1').disabled = false;
+            document.getElementById('btn-next-1').removeAttribute('disabled');
+        }
+
+        /* ─── Step Navigation ─────────────────── */
+        window.goToStep = (n) => {
+            if (n === 2 && !selectedSeat) { alert('Please select a seat / room first.'); return; }
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step-${i}`)?.classList.toggle('hidden', i !== n);
+                const ind = document.getElementById(`step-ind-${i}`);
+                if (ind) { ind.classList.toggle('active', i <= n); ind.classList.toggle('done', i < n); }
+            }
+            if (n === 2) {
+                document.getElementById('review-seat-row').style.display = '';
+                document.getElementById('review-seat-val').textContent = selectedSeat;
+                document.getElementById('review-total').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+            }
+            if (n === 3) document.getElementById('pay-amount-display').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        /* ─── Payment Method ─────────────────── */
+        window.selectPayment = (el, method) => {
+            document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('active'));
+            el.classList.add('active');
+            selectedPayMethod = method;
+            document.querySelectorAll('.pay-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`panel-${method}`).classList.remove('hidden');
+        };
+
+        window.selectUPI = (btn) => {
+            document.querySelectorAll('.upi-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+
+        /* ─── Card Formatting ─────────────────── */
+        window.fmtCard = (el) => {
+            let v = el.value.replace(/\D/g, '').substring(0, 16);
+            el.value = v.replace(/(.{4})/g, '$1 ').trim();
+            document.getElementById('cv-num').textContent = el.value || '•••• •••• •••• ••••';
+        };
+        window.fmtExpiry = (el) => {
+            let v = el.value.replace(/\D/g, '');
+            if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
+            el.value = v;
+            document.getElementById('cv-exp').textContent = el.value || 'MM/YY';
+        };
+
+        /* ─── Process Payment ─────────────────── */
+        window.processPayment = () => {
+            const payBtn = document.querySelector('.pay-btn');
+            payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            payBtn.disabled = true;
+            setTimeout(() => {
+                const bookId = 'KNY-' + Math.floor(Math.random() * 900000 + 100000);
+                document.getElementById('confirm-id').textContent = bookId;
+                document.getElementById('confirm-seat').textContent = selectedSeat || '—';
+                document.getElementById('confirm-amount').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+                document.getElementById('confirm-payment').textContent = {
+                    upi: 'UPI / Online', card: 'Card Payment', cash: 'Cash at Counter'
+                }[selectedPayMethod];
+                goToStep(4);
+
+                // ── Save booking to DB ──────────────────────
+                fetch('/api/book/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        booking_ref: bookId,
+                        service_type: '{{ type }}',
+                        item_name: '{{ name }}',
+                        from_city: '{{ src }}',
+                        to_city: '{{ dst }}',
+                        travel_date: '{{ dep }}',
+                        seat_room: selectedSeat || '',
+                        class_type: '{{ cls }}',
+                        price: selectedPrice,
+                        pay_method: { upi: 'UPI/Online', card: 'Card', cash: 'Cash' }[selectedPayMethod] || 'UPI'
+                    })
+                }).catch(function () { });
+            }, 2200);
+        };
+    </script>
+</body>
+
+</html>

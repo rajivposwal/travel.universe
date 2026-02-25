@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Airline Service — ASRS Travel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .ns-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 6%;
+            text-align: center;
+            background: var(--bg);
+        }
+
+        .ns-icon {
+            font-size: 80px;
+            margin-bottom: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-14px);
+            }
+        }
+
+        .ns-title {
+            font-size: 40px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .ns-city {
+            display: inline-block;
+            background: rgba(255, 69, 58, 0.1);
+            color: #ef4444;
+            padding: 4px 18px;
+            border-radius: 50px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 800;
+            font-size: 20px;
+            margin: 0 6px;
+        }
+
+        .ns-sub {
+            font-size: 16px;
+            color: var(--muted);
+            max-width: 480px;
+            line-height: 1.8;
+            margin: 16px auto 36px;
+        }
+
+        .ns-suggest-label {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .ns-cities-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 900px;
+            margin: 0 auto 40px;
+        }
+
+        .ns-city-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text);
+        }
+
+        .ns-city-chip:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .ns-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <div class="ns-page">
+
+        {% if reason == 'same' %}
+        <div class="ns-icon">🔄</div>
+        <h1 class="ns-title">Same City Selected</h1>
+        <p class="ns-sub">
+            Source and destination cannot be the same city.
+            <span class="ns-city">{{ city }}</span>
+            Please choose a different destination.
+        </p>
+        {% else %}
+        <div class="ns-icon">🚫</div>
+        <h1 class="ns-title">No Airline Service Available</h1>
+        <p class="ns-sub">
+            Sorry, we currently do not have scheduled airline service for
+            <span class="ns-city">{{ city }}</span>.
+            <br>
+            ASRS Travel covers <strong>{{ cities|length }} airports</strong> across India.
+            Please try one of the cities below.
+        </p>
+        {% endif %}
+
+        <div class="ns-suggest-label">Cities with Scheduled Airline Service</div>
+        <div class="ns-cities-grid">
+            {% for c in cities %}
+            <span class="ns-city-chip" onclick="window.location='/?prefill={{ c }}'">
+                {{ c }}
+            </span>
+            {% endfor %}
+        </div>
+
+        <div class="ns-actions">
+            <a href="/"><button class="btn btn-primary"><i class="fas fa-search"></i> New Search</button></a>
+            <a href="{{ url_for('deals') }}"><button class="btn btn-ghost"><i class="fas fa-star"></i> View
+                    Deals</button></a>
+        </div>
+
+    </div>
+
+    <button id="theme-toggle"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+</body>
+
+</html>

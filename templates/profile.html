@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile — ASRS Travel</title>
+    <meta name="description" content="View and manage your ASRS Travel profile, booking history, and personal details.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --profile-bg: #0d0f1a;
+            --card-bg: #13162a;
+            --card-border: rgba(255, 159, 28, .18);
+            --accent: #ff9f1c;
+            --accent2: #ff5500;
+            --text: #e8eaf6;
+            --muted: rgba(232, 234, 246, .45);
+            --radius: 20px;
+            --shadow: 0 8px 40px rgba(0, 0, 0, .45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--profile-bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ──────────────────────────────────── */
+        .pr-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 32px;
+            background: rgba(13, 15, 26, .92);
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .pr-logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .pr-logo span {
+            color: var(--text);
+        }
+
+        .pr-nav {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 50px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background .2s, border-color .2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 159, 28, .12);
+            border-color: var(--accent);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            background: rgba(231, 29, 54, .12);
+            border: 1px solid rgba(231, 29, 54, .3);
+            border-radius: 50px;
+            color: #ff4d6d;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background .2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(231, 29, 54, .22);
+        }
+
+        /* ── Page Layout ─────────────────────────────── */
+        .pr-body {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 28px;
+        }
+
+        @media(max-width:860px) {
+            .pr-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Left Panel ──────────────────────────────── */
+        .pr-left {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .pr-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Avatar */
+        .avatar-wrap {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 20px;
+        }
+
+        .avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 0 6px rgba(255, 159, 28, .18), 0 8px 32px rgba(255, 159, 28, .3);
+        }
+
+        .avatar-initials {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 0 6px rgba(255, 159, 28, .18), 0 8px 32px rgba(255, 159, 28, .3);
+            animation: pulse-av 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-av {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px rgba(255, 159, 28, .18), 0 8px 32px rgba(255, 159, 28, .3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 12px rgba(255, 159, 28, .06), 0 8px 40px rgba(255, 159, 28, .45);
+            }
+        }
+
+        .avatar-edit-btn {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid var(--profile-bg);
+            transition: transform .18s, background .18s;
+            font-size: 13px;
+            color: #fff;
+        }
+
+        .avatar-edit-btn:hover {
+            transform: scale(1.12);
+            background: var(--accent2);
+        }
+
+        #photo-input {
+            display: none;
+        }
+
+        .pr-username {
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .pr-email {
+            font-size: 13px;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .pr-since {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            background: rgba(255, 159, 28, .08);
+            border-radius: 50px;
+            padding: 4px 14px;
+            display: inline-block;
+            margin: 0 auto 4px;
+        }
+
+        .pr-provider-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            margin: 10px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .pr-provider-badge i {
+            color: var(--accent);
+        }
+
+        /* Edit form */
+        .pr-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .pr-input {
+            width: 100%;
+            padding: 11px 14px;
+            background: rgba(255, 255, 255, .05);
+            border: 1.5px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color .2s;
+            margin-bottom: 16px;
+        }
+
+        .pr-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .pr-save-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .pr-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 159, 28, .4);
+        }
+
+        /* Stats Card */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-box {
+            background: rgba(255, 159, 28, .06);
+            border: 1px solid rgba(255, 159, 28, .14);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── Right Panel ─────────────────────────────── */
+        .pr-right {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* Filter Tabs */
+        .bk-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+        }
+
+        .bk-tab {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            background: rgba(255, 255, 255, .05);
+            color: var(--muted);
+            transition: all .18s;
+        }
+
+        .bk-tab.active,
+        .bk-tab:hover {
+            background: rgba(255, 159, 28, .14);
+            border-color: rgba(255, 159, 28, .4);
+            color: var(--accent);
+        }
+
+        /* Booking Cards */
+        .bk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .bk-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: border-color .2s, transform .18s;
+            animation: slide-in .35s ease both;
+        }
+
+        .bk-card:hover {
+            border-color: rgba(255, 159, 28, .35);
+            transform: translateY(-2px);
+        }
+
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bk-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .bk-icon.Flight {
+            background: rgba(58, 134, 255, .15);
+            color: #3a86ff;
+        }
+
+        .bk-icon.Hotel {
+            background: rgba(46, 196, 182, .15);
+            color: #2ec4b6;
+        }
+
+        .bk-icon.Train {
+            background: rgba(114, 9, 183, .15);
+            color: #a855f7;
+        }
+
+        .bk-icon.Bus {
+            background: rgba(6, 214, 160, .15);
+            color: #06d6a0;
+        }
+
+        .bk-icon.Food {
+            background: rgba(255, 159, 28, .15);
+            color: var(--accent);
+        }
+
+        .bk-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .bk-ref {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 700;
+            letter-spacing: .6px;
+        }
+
+        .bk-name {
+            font-size: 15px;
+            font-weight: 800;
+            margin: 3px 0 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bk-route {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bk-arrow {
+            color: var(--accent);
+            font-size: 10px;
+        }
+
+        .bk-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .bk-price {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .bk-date {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .bk-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .bk-status.Confirmed {
+            background: rgba(6, 214, 160, .15);
+            color: #06d6a0;
+        }
+
+        .bk-status.Completed {
+            background: rgba(58, 134, 255, .15);
+            color: #3a86ff;
+        }
+
+        .bk-status.Cancelled {
+            background: rgba(231, 29, 54, .15);
+            color: #ff4d6d;
+        }
+
+        /* Empty State */
+        .bk-empty {
+            background: var(--card-bg);
+            border: 1px dashed var(--card-border);
+            border-radius: var(--radius);
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .bk-empty i {
+            font-size: 48px;
+            color: var(--muted);
+            opacity: .4;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .bk-empty h3 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .bk-empty p {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .btn-book-now {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .btn-book-now:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 159, 28, .4);
+        }
+
+        /* Section Title */
+        .pr-section-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 14px;
+        }
+
+        /* Toast */
+        #pr-toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1a1a3a;
+            border: 1px solid var(--card-border);
+            border-radius: 50px;
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+            transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        #pr-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #pr-toast.success {
+            border-color: #06d6a0;
+            color: #06d6a0;
+        }
+
+        #pr-toast.error {
+            border-color: #ff4d6d;
+            color: #ff4d6d;
+        }
+
+        /* Flash */
+        .flash-msg {
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .flash-msg.success {
+            background: rgba(6, 214, 160, .12);
+            color: #06d6a0;
+            border: 1px solid rgba(6, 214, 160, .3);
+        }
+
+        .flash-msg.error {
+            background: rgba(255, 77, 109, .12);
+            color: #ff4d6d;
+            border: 1px solid rgba(255, 77, 109, .3);
+        }
+
+        /* Uploading state */
+        .uploading {
+            opacity: .5;
+            pointer-events: none;
+        }
+
+        /* Type breakdown */
+        .type-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .type-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .type-label {
+            font-size: 12px;
+            color: var(--muted);
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .type-bar-wrap {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, .07);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .type-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width .8s ease;
+        }
+
+        .type-count {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            width: 24px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ── Header ──────────────────────────────────── -->
+    <header class="pr-header">
+        <a href="{{ url_for('index') }}" class="pr-logo">✈ ASRS<span> Travel</span></a>
+        <nav class="pr-nav">
+            <a href="{{ url_for('index') }}" class="btn-back"><i class="fas fa-home"></i> Home</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </header>
+
+    <!-- ── Flash Messages ──────────────────────────── -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="max-width:1100px;margin:18px auto 0;padding:0 24px;">
+        {% for cat, msg in messages %}
+        <div class="flash-msg {{ cat }}"><i
+                class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i> {{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- ── Main Body ───────────────────────────────── -->
+    <div class="pr-body">
+
+        <!-- ═══ LEFT PANEL ═══ -->
+        <div class="pr-left">
+
+            <!-- Profile Card -->
+            <div class="pr-card" style="text-align:center;">
+                <div class="avatar-wrap">
+                    {% if user.profile_photo %}
+                    <img class="avatar-img" id="avatar-preview"
+                        src="{{ url_for('static', filename='uploads/' ~ user.profile_photo) }}" alt="Profile Photo">
+                    {% else %}
+                    <div class="avatar-initials" id="avatar-preview" data-bgcolor="{{ avatar_color }}">
+                        {{ user.username[0].upper() }}
+                    </div>
+                    {% endif %}
+                    <label for="photo-input" class="avatar-edit-btn" title="Change Photo">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" id="photo-input" accept="image/*">
+                </div>
+
+                <div class="pr-username">{{ user.username }}</div>
+                <div class="pr-email">{{ user.email }}</div>
+                <div class="pr-since">
+                    Member since {{ user.created_at[:10] if user.created_at else 'N/A' }}
+                </div>
+                <div class="pr-provider-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    {{ user.auth_provider | capitalize }} Account
+                </div>
+            </div>
+
+            <!-- Edit Profile -->
+            <div class="pr-card">
+                <div class="pr-section-title"><i class="fas fa-user-edit"></i> Edit Profile</div>
+                <form action="{{ url_for('profile_update') }}" method="POST">
+                    <label class="pr-label">Mobile Number</label>
+                    <input class="pr-input" type="tel" name="phone" maxlength="10" placeholder="Enter 10-digit number"
+                        value="{{ user.phone or '' }}" pattern="[0-9]{10}" title="10-digit Indian mobile number">
+                    <button type="submit" class="pr-save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <!-- Stats -->
+            <div class="pr-card">
+                <div class="pr-section-title"><i class="fas fa-chart-bar"></i> My Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-num">{{ bookings|length }}</div>
+                        <div class="stat-label">Total Bookings</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">₹{{ "{:,}".format(total_spent) }}</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">{{ bookings|selectattr('status','eq','Confirmed')|list|length }}</div>
+                        <div class="stat-label">Confirmed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num">{{ by_type|length }}</div>
+                        <div class="stat-label">Service Types</div>
+                    </div>
+                </div>
+
+                {% if by_type %}
+                <div class="type-bars" style="margin-top:20px;">
+                    <div class="pr-section-title" style="margin-bottom:8px;"><i class="fas fa-layer-group"></i> By
+                        Service</div>
+                    {% set max_count = by_type.values()|max %}
+                    {% for stype, cnt in by_type.items() %}
+                    <div class="type-row">
+                        <span class="type-label">{{ stype }}</span>
+                        <div class="type-bar-wrap">
+                            <div class="type-bar-fill" data-width="{{ (cnt / max_count * 100)|round }}"></div>
+                        </div>
+                        <span class="type-count">{{ cnt }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+        </div><!-- /pr-left -->
+
+        <!-- ═══ RIGHT PANEL ═══ -->
+        <div class="pr-right">
+
+            <!-- Filter Tabs -->
+            <div class="bk-tabs">
+                <button class="bk-tab active" data-filter="all">All</button>
+                <button class="bk-tab" data-filter="Flight"><i class="fas fa-plane"></i> Flights</button>
+                <button class="bk-tab" data-filter="Hotel"><i class="fas fa-hotel"></i> Hotels</button>
+                <button class="bk-tab" data-filter="Train"><i class="fas fa-train"></i> Trains</button>
+                <button class="bk-tab" data-filter="Bus"><i class="fas fa-bus"></i> Buses</button>
+                <button class="bk-tab" data-filter="Food"><i class="fas fa-utensils"></i> Food</button>
+            </div>
+
+            <!-- Booking List -->
+            {% if bookings %}
+            <div class="bk-list" id="bk-list">
+                {% for b in bookings %}
+                {% set icons =
+                {'Flight':'fa-plane','Hotel':'fa-hotel','Train':'fa-train','Bus':'fa-bus','Food':'fa-utensils'} %}
+                <div class="bk-card" data-type="{{ b.service_type }}">
+                    <div class="bk-icon {{ b.service_type }}">
+                        <i class="fas {{ icons.get(b.service_type, 'fa-ticket-alt') }}"></i>
+                    </div>
+                    <div class="bk-info">
+                        <div class="bk-ref">{{ b.booking_ref }}</div>
+                        <div class="bk-name">{{ b.item_name or b.service_type }}</div>
+                        <div class="bk-route">
+                            {% if b.from_city %}<span>{{ b.from_city }}</span><i
+                                class="fas fa-arrow-right bk-arrow"></i><span>{{ b.to_city }}</span>{% endif %}
+                            {% if b.seat_room %} &bull; {{ b.seat_room }}{% endif %}
+                            {% if b.class_type %} &bull; {{ b.class_type }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="bk-meta">
+                        <div class="bk-price">₹{{ "{:,}".format(b.price) }}</div>
+                        <div class="bk-date">{{ b.booked_at[:10] }}</div>
+                        <div class="bk-status {{ b.status }}">{{ b.status }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <!-- Empty state -->
+            <div class="bk-empty" id="bk-empty">
+                <i class="fas fa-ticket-alt"></i>
+                <h3>No Bookings Yet</h3>
+                <p>Your confirmed bookings will appear here.<br>
+                    Start exploring flights, hotels, trains and more!</p>
+                <a href="{{ url_for('index') }}" class="btn-book-now">
+                    <i class="fas fa-search"></i> Search & Book
+                </a>
+            </div>
+            {% endif %}
+
+        </div><!-- /pr-right -->
+    </div><!-- /pr-body -->
+
+    <!-- Toast -->
+    <div id="pr-toast"></div>
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" style="position:fixed;bottom:24px;right:24px;
+  width:48px;height:48px;border-radius:50%;background:rgba(255,159,28,.15);
+  border:1.5px solid rgba(255,159,28,.3);color:#ff9f1c;font-size:18px;
+  cursor:pointer;z-index:900;">
+        <i class="fas fa-moon"></i>
+    </button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+
+    <script>
+        /* ── Photo Upload ──────────────────────────────── */
+        document.getElementById('photo-input').addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+            if (!allowed.includes(file.type)) {
+                showToast('Only PNG, JPG, GIF, WEBP allowed.', 'error'); return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('File too large (max 5 MB).', 'error'); return;
+            }
+
+            // Preview immediately
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var prev = document.getElementById('avatar-preview');
+                if (prev.tagName === 'DIV') {
+                    var img = document.createElement('img');
+                    img.className = 'avatar-img'; img.id = 'avatar-preview';
+                    img.src = e.target.result; img.alt = 'Profile Photo';
+                    prev.parentNode.replaceChild(img, prev);
+                } else { prev.src = e.target.result; }
+            };
+            reader.readAsDataURL(file);
+
+            // Upload
+            var fd = new FormData();
+            fd.append('photo', file);
+            document.querySelector('.avatar-edit-btn').classList.add('uploading');
+
+            fetch('/profile/upload-photo', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    document.querySelector('.avatar-edit-btn').classList.remove('uploading');
+                    if (d.success) {
+                        showToast('Profile photo updated! ✅', 'success');
+                    } else {
+                        showToast(d.message || 'Upload failed.', 'error');
+                    }
+                })
+                .catch(function () {
+                    document.querySelector('.avatar-edit-btn').classList.remove('uploading');
+                    showToast('Upload failed. Try again.', 'error');
+                });
+        });
+
+        /* ── Booking Filter Tabs ───────────────────────── */
+        document.querySelectorAll('.bk-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.bk-tab').forEach(function (t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                var filter = this.dataset.filter;
+                var cards = document.querySelectorAll('.bk-card');
+                var shown = 0;
+                cards.forEach(function (card) {
+                    var match = filter === 'all' || card.dataset.type === filter;
+                    card.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
+                var empty = document.getElementById('bk-empty-filtered');
+                if (shown === 0 && cards.length > 0) {
+                    if (!empty) {
+                        var div = document.createElement('div');
+                        div.id = 'bk-empty-filtered';
+                        div.className = 'bk-empty';
+                        div.innerHTML = '<i class="fas fa-filter"></i><h3>No ' + filter + ' bookings</h3>' +
+                            '<p>You have not booked any ' + filter.toLowerCase() + ' services yet.</p>';
+                        document.getElementById('bk-list').after(div);
+                    }
+                } else {
+                    if (empty) empty.remove();
+                }
+            });
+        });
+
+        /* ── Toast ─────────────────────────────────────── */
+        function showToast(msg, type) {
+            var t = document.getElementById('pr-toast');
+            t.textContent = msg;
+            t.className = 'show ' + (type || '');
+            setTimeout(function () { t.className = ''; }, 3500);
+        }
+
+        /* ── Apply data-attribute styles ───────────────── */
+        document.querySelectorAll('[data-bgcolor]').forEach(function (el) {
+            el.style.background = el.getAttribute('data-bgcolor');
+        });
+        document.querySelectorAll('[data-width]').forEach(function (el) {
+            el.style.width = el.getAttribute('data-width') + '%';
+        });
+    </script>
+</body>
+
+</html>

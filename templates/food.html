@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Menu — ASRS Travel</title>
+    <meta name="description"
+        content="Order Continental, Indian and Desserts from ASRS Travel's in-flight and lounge food menu.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Food page specific styles ───────────────────────── */
+        .food-hero {
+            background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 40%, #ff6b00 100%);
+            padding: 60px 6% 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .food-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .food-hero h1 {
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .food-hero p {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 15px;
+            margin-bottom: 28px;
+        }
+
+        .food-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 0 4px 8px;
+        }
+
+        /* ── Filter Bar ───────────────────────────────────────── */
+        .food-filters {
+            position: sticky;
+            top: 64px;
+            z-index: 90;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 6%;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .food-filters .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px 10px 40px;
+            border: 1.5px solid var(--border);
+            border-radius: 50px;
+            background: var(--input-bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+            position: relative;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .food-filters .search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-btn {
+            padding: 9px 18px;
+            border-radius: 50px;
+            border: 1.5px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .filter-btn.veg-btn.active {
+            background: #2e7d32;
+            border-color: #2e7d32;
+            color: #fff;
+        }
+
+        .filter-btn.nonveg-btn.active {
+            background: #c62828;
+            border-color: #c62828;
+            color: #fff;
+        }
+
+        /* ── Menu Layout ─────────────────────────────────────── */
+        .food-body {
+            padding: 32px 6%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .food-section {
+            margin-bottom: 48px;
+        }
+
+        .food-section-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            letter-spacing: -0.3px;
+        }
+
+        .food-subsection {
+            margin-bottom: 28px;
+        }
+
+        .food-subsection-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        /* ── Food Card ────────────────────────────────────────── */
+        .food-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: transform 0.22s, box-shadow 0.22s;
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .food-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .food-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+
+        .food-card:hover::before {
+            opacity: 1;
+        }
+
+        .food-card.non-veg::before {
+            background: #c62828;
+        }
+
+        .food-emoji {
+            font-size: 32px;
+            min-width: 40px;
+            background: var(--input-bg);
+            border-radius: 10px;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .food-info {
+            flex: 1;
+        }
+
+        .food-name {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .food-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .food-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .food-price {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .food-price span {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        /* Veg / Non-veg dot indicator */
+        .food-type-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 1.5px solid;
+            display: inline-block;
+            position: relative;
+        }
+
+        .food-type-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .veg-dot {
+            border-color: #2e7d32;
+        }
+
+        .veg-dot::after {
+            background: #2e7d32;
+        }
+
+        .nonveg-dot {
+            border-color: #c62828;
+        }
+
+        .nonveg-dot::after {
+            background: #c62828;
+        }
+
+        /* Cart / Order button */
+        .add-btn {
+            background: none;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            border-radius: 50px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .add-btn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .add-btn.added {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Cart badge */
+        .cart-badge {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 999;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50px;
+            padding: 14px 24px;
+            font-weight: 900;
+            font-size: 14px;
+            box-shadow: 0 8px 30px rgba(255, 159, 28, 0.5);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+
+        .cart-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .cart-badge.show {
+            display: flex;
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+            display: none;
+        }
+
+        .no-results i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* ── Cart Drawer ─────────────────────────────────────── */
+        .cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+        }
+
+        .cart-overlay.open {
+            display: flex;
+        }
+
+        .cart-drawer {
+            background: var(--card-bg);
+            border-radius: 28px 28px 0 0;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 28px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cart-header h3 {
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .cart-close {
+            background: var(--input-bg);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cart-item-name {
+            flex: 1;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .cart-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qty-btn {
+            background: var(--input-bg);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 0;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .cart-total span:last-child {
+            color: var(--accent);
+        }
+
+        .cart-order-btn {
+            width: 100%;
+            margin-top: 16px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cart-order-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 159, 28, 0.4);
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+
+        .cart-empty i {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        @media(max-width:600px) {
+            .food-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .food-filters {
+                padding: 12px 4%;
+            }
+
+            .food-body {
+                padding: 20px 4%;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <!-- ─── Header ─────────────────────────────────────── -->
+    <header>
+        <div class="logo" onclick="window.location='/'">
+            <i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span>
+        </div>
+        <nav style="display:flex;gap:24px;align-items:center;">
+            <a href="/" style="font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="/hotels" style="font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;">
+                <i class="fas fa-hotel"></i> Hotels
+            </a>
+        </nav>
+        <div class="header-actions">
+            {% if logged_in %}
+            <div class="user-avatar-chip">
+                <div class="ua-dot">{{ user_name[0].upper() }}</div>
+                <div class="ua-info">
+                    <span class="ua-greeting">Signed in as</span>
+                    <span class="ua-name">{{ user_name }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}"><button class="btn btn-danger">Logout</button></a>
+            {% else %}
+            <a href="{{ url_for('login') }}"><button class="btn btn-primary">Sign In</button></a>
+            {% endif %}
+            <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-toggle" title="Toggle Dark Mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ─── Hero ─────────────────────────────────────────── -->
+    <div class="food-hero">
+        <div style="font-size:52px;margin-bottom:12px;">🍽️</div>
+        <h1>Our Food Menu</h1>
+        <p>{{ total }} delicious items across Continental, Indian & Desserts</p>
+        <div>
+            <span class="food-badge">🥗 Continental</span>
+            <span class="food-badge">🍛 Indian</span>
+            <span class="food-badge">🍰 Desserts</span>
+            <span class="food-badge">From ₹40</span>
+        </div>
+    </div>
+
+    <!-- ─── Filter Bar ────────────────────────────────────── -->
+    <div class="food-filters" id="filterBar">
+        <div class="search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" class="search-input" id="foodSearch" placeholder="Search dishes…" oninput="filterFood()">
+        </div>
+        <button class="filter-btn active" data-cat="all" onclick="setCat(this,'all')">All</button>
+        <button class="filter-btn" data-cat="Continental" onclick="setCat(this,'Continental')">🍝 Continental</button>
+        <button class="filter-btn" data-cat="Indian" onclick="setCat(this,'Indian')">🍛 Indian</button>
+        <button class="filter-btn" data-cat="Desserts" onclick="setCat(this,'Desserts')">🍰 Desserts</button>
+        <button class="filter-btn veg-btn" id="vegBtn" onclick="toggleType('Veg')">🟢 Veg</button>
+        <button class="filter-btn nonveg-btn" id="nonvegBtn" onclick="toggleType('Non-Veg')">🔴 Non-Veg</button>
+    </div>
+
+    <!-- ─── Menu Body ──────────────────────────────────────── -->
+    <div class="food-body" id="menuBody">
+
+        {% for category, subcats in grouped.items() %}
+        <div class="food-section" data-category="{{ category }}">
+            <div class="food-section-title">
+                {% if category == 'Continental' %}🍝
+                {% elif category == 'Indian' %}🍛
+                {% elif category == 'Desserts' %}🍰
+                {% endif %}
+                {{ category }} Cuisine
+            </div>
+
+            {% for subcat, items in subcats.items() %}
+            <div class="food-subsection">
+                <div class="food-subsection-title">{{ subcat }}</div>
+                <div class="food-grid">
+                    {% for item in items %}
+                    <div class="food-card {% if item.type == 'Non-Veg' %}non-veg{% endif %}"
+                        data-name="{{ item.name|lower }}" data-category="{{ item.category }}"
+                        data-type="{{ item.type }}" data-price="{{ item.price_min }}" id="item-{{ item.id }}">
+                        <div class="food-emoji">{{ item.emoji }}</div>
+                        <div class="food-info">
+                            <div class="food-name">{{ item.name }}</div>
+                            <div class="food-desc">{{ item.description }}</div>
+                            <div class="food-footer">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span
+                                        class="food-type-dot {% if item.type == 'Non-Veg' %}nonveg-dot{% else %}veg-dot{% endif %}"></span>
+                                    <span class="food-price">
+                                        ₹{{ item.price_min }}{% if item.price_max > item.price_min %}–{{ item.price_max
+                                        }}{% endif %}
+                                    </span>
+                                </div>
+                                <button class="add-btn" id="btn-{{ item.id }}"
+                                    onclick="addToCart({{ item.id }}, '{{ item.name|replace("'","\\'")|e }}', {{ item.price_min }})">
+                                    + Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div class="no-results" id="noResults">
+            <i class="fas fa-search"></i>
+            No dishes found. Try a different search or filter.
+        </div>
+    </div>
+
+    <!-- ─── Cart Badge ─────────────────────────────────────── -->
+    <div class="cart-badge" id="cartBadge" onclick="openCart()">
+        <i class="fas fa-shopping-basket"></i>
+        <span id="cartCount">0 items</span>
+        <span>•</span>
+        <span id="cartTotal">₹0</span>
+    </div>
+
+    <!-- ─── Cart Drawer ────────────────────────────────────── -->
+    <div class="cart-overlay" id="cartOverlay" onclick="closeCartOnOverlay(event)">
+        <div class="cart-drawer">
+            <div class="cart-header">
+                <h3>🛒 Your Order</h3>
+                <button class="cart-close" onclick="closeCart()"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="cartItems">
+                <div class="cart-empty" id="cartEmpty">
+                    <i class="fas fa-utensils"></i>
+                    Your cart is empty. Add some delicious items!
+                </div>
+            </div>
+            <div class="cart-total" id="cartTotalRow" style="display:none;">
+                <span>Total</span>
+                <span id="cartGrandTotal">₹0</span>
+            </div>
+            <button class="cart-order-btn" id="cartOrderBtn" style="display:none;" onclick="placeOrder()">
+                <i class="fas fa-check-circle"></i> Place Order
+            </button>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 ASRS Travel — All rights reserved</footer>
+
+    <script>
+        // ── Theme ───────────────────────────────────────────────
+        const root = document.documentElement;
+        function toggleTheme() {
+            const curr = document.body.getAttribute('data-theme');
+            const next = curr === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('theme-toggle').innerHTML =
+                next === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        (function () {
+            const t = localStorage.getItem('theme');
+            if (t) {
+                document.body.setAttribute('data-theme', t);
+                if (t === 'dark') document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        })();
+
+        // ── Filter State ────────────────────────────────────────
+        let activeCat = 'all';
+        let activeType = '';   // '' | 'Veg' | 'Non-Veg'
+
+        function setCat(btn, cat) {
+            document.querySelectorAll('.filter-btn[data-cat]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeCat = cat;
+            filterFood();
+        }
+
+        function toggleType(type) {
+            if (activeType === type) {
+                activeType = '';
+                document.getElementById('vegBtn').classList.remove('active');
+                document.getElementById('nonvegBtn').classList.remove('active');
+            } else {
+                activeType = type;
+                document.getElementById('vegBtn').classList.toggle('active', type === 'Veg');
+                document.getElementById('nonvegBtn').classList.toggle('active', type === 'Non-Veg');
+            }
+            filterFood();
+        }
+
+        function filterFood() {
+            const q = document.getElementById('foodSearch').value.trim().toLowerCase();
+            const cards = document.querySelectorAll('.food-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const matchCat = activeCat === 'all' || card.dataset.category === activeCat;
+                const matchType = !activeType || card.dataset.type === activeType;
+                const matchQ = !q || card.dataset.name.includes(q);
+                const show = matchCat && matchType && matchQ;
+                card.style.display = show ? 'flex' : 'none';
+                if (show) visible++;
+            });
+
+            // Hide empty subsections
+            document.querySelectorAll('.food-subsection').forEach(sec => {
+                const anyVisible = [...sec.querySelectorAll('.food-card')].some(c => c.style.display !== 'none');
+                sec.style.display = anyVisible ? '' : 'none';
+            });
+            document.querySelectorAll('.food-section').forEach(sec => {
+                const anyVisible = [...sec.querySelectorAll('.food-subsection')].some(s => s.style.display !== 'none');
+                sec.style.display = anyVisible ? '' : 'none';
+            });
+
+            document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        // ── Cart ────────────────────────────────────────────────
+        let cart = {};  // id → { name, price, qty }
+
+        function addToCart(id, name, price) {
+            const btn = document.getElementById('btn-' + id);
+            if (cart[id]) {
+                cart[id].qty++;
+            } else {
+                cart[id] = { name, price, qty: 1 };
+            }
+            btn.textContent = '✓ ' + cart[id].qty;
+            btn.classList.add('added');
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const ids = Object.keys(cart);
+            const totalQty = ids.reduce((s, k) => s + cart[k].qty, 0);
+            const totalAmt = ids.reduce((s, k) => s + cart[k].qty * cart[k].price, 0);
+
+            document.getElementById('cartCount').textContent = totalQty + (totalQty === 1 ? ' item' : ' items');
+            document.getElementById('cartTotal').textContent = '₹' + totalAmt;
+            document.getElementById('cartGrandTotal').textContent = '₹' + totalAmt;
+
+            const badge = document.getElementById('cartBadge');
+            badge.classList.toggle('show', totalQty > 0);
+
+            // Rebuild cart body
+            const el = document.getElementById('cartItems');
+            const empty = document.getElementById('cartEmpty');
+            const totalRow = document.getElementById('cartTotalRow');
+            const orderBtn = document.getElementById('cartOrderBtn');
+
+            if (ids.length === 0) {
+                empty.style.display = '';
+                totalRow.style.display = 'none';
+                orderBtn.style.display = 'none';
+                el.innerHTML = '';
+                el.appendChild(empty);
+                return;
+            }
+
+            empty.style.display = 'none';
+            totalRow.style.display = 'flex';
+            orderBtn.style.display = '';
+
+            let html = '';
+            ids.forEach(id => {
+                const it = cart[id];
+                html += `<div class="cart-item">
+            <div class="cart-item-name">${it.name}</div>
+            <div class="cart-qty">
+                <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+                <span>${it.qty}</span>
+                <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+            </div>
+            <div class="cart-item-price">₹${it.qty * it.price}</div>
+        </div>`;
+            });
+            el.innerHTML = html;
+            el.appendChild(empty);
+        }
+
+        function changeQty(id, delta) {
+            cart[id].qty += delta;
+            const btn = document.getElementById('btn-' + id);
+            if (cart[id].qty <= 0) {
+                delete cart[id];
+                if (btn) { btn.textContent = '+ Add'; btn.classList.remove('added'); }
+            } else {
+                if (btn) { btn.textContent = '✓ ' + cart[id].qty; }
+            }
+            updateCartUI();
+        }
+
+        function openCart() { document.getElementById('cartOverlay').classList.add('open'); updateCartUI(); }
+        function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); }
+        function closeCartOnOverlay(e) { if (e.target === document.getElementById('cartOverlay')) closeCart(); }
+
+        function placeOrder() {
+            const total = Object.keys(cart).reduce((s, k) => s + cart[k].qty * cart[k].price, 0);
+            closeCart();
+            cart = {};
+            document.querySelectorAll('.add-btn').forEach(b => { b.textContent = '+ Add'; b.classList.remove('added'); });
+            updateCartUI();
+            // Visual confirmation
+            const msg = document.createElement('div');
+            msg.innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32;font-size:40px;margin-bottom:12px;display:block;"></i>Order placed! ₹' + total + ' • Our team will confirm shortly.';
+            msg.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;font-size:18px;font-weight:700;padding:20px;';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>
