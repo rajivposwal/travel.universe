@@ -761,13 +761,7 @@
     <header class="pr-header">
         <a href="{{ url_for('index') }}" class="pr-logo">✈ ASRS<span> Travel</span></a>
         <nav class="pr-nav">
-            <!-- Theme Toggle -->
-            <button id="theme-toggle" title="Toggle theme" style="width:38px;height:38px;border-radius:50%;background:var(--tab-bg);
-                     border:1.5px solid var(--card-border);color:var(--accent);font-size:16px;
-                     cursor:pointer;display:flex;align-items:center;justify-content:center;
-                     transition:background .2s,transform .15s;">
-                <i class="fas fa-moon"></i>
-            </button>
+
             <a href="{{ url_for('index') }}" class="btn-back"><i class="fas fa-home"></i> Home</a>
             <a href="{{ url_for('logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </nav>
@@ -895,7 +889,9 @@
                 {% for b in bookings %}
                 {% set icons =
                 {'Flight':'fa-plane','Hotel':'fa-hotel','Train':'fa-train','Bus':'fa-bus','Food':'fa-utensils'} %}
-                <div class="bk-card" data-type="{{ b.service_type }}" data-status="{{ b.status }}">
+                <div class="bk-card" data-type="{{ b.service_type }}" data-status="{{ b.status }}"
+                    onclick="window.location.href='{{ url_for('manage_booking', booking_ref=b.booking_ref) }}'"
+                    style="cursor:pointer; position:relative;">
                     <div class="bk-icon {{ b.service_type }}">
                         <i class="fas {{ icons.get(b.service_type, 'fa-ticket-alt') }}"></i>
                     </div>
@@ -923,7 +919,8 @@
                         <div class="bk-date">{{ b.booked_at[:10] }}</div>
                         <div class="bk-status {{ b.status|replace(' ','-') }}">{{ b.status }}</div>
                         {% if b.status == 'Payment Pending' and b.service_type == 'Food' %}
-                        <button class="pay-now-btn" onclick="payNow(this, '{{ b.booking_ref }}')" title="Mark as paid">
+                        <button class="pay-now-btn"
+                            onclick="event.stopPropagation(); payNow(this, '{{ b.booking_ref }}')" title="Mark as paid">
                             <i class="fas fa-credit-card"></i> Pay Now
                         </button>
                         {% endif %}
@@ -947,6 +944,12 @@
 
         </div><!-- /pr-right -->
     </div><!-- /pr-body -->
+
+    <!-- Theme Toggle Fixed Bottom Right -->
+    <button id="theme-toggle" title="Toggle theme"
+        style="position:fixed; bottom:30px; right:30px; width:52px; height:52px; border-radius:50%; background:var(--tab-bg); border:1.5px solid var(--card-border);color:var(--accent);font-size:20px; cursor:pointer;display:flex;align-items:center;justify-content:center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); z-index:1000; transition:background .2s,transform .15s;">
+        <i class="fas fa-moon"></i>
+    </button>
 
     <!-- Toast -->
     <div id="pr-toast"></div>

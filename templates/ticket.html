@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>E-Ticket : {{ b.booking_ref }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #e8eaf6;
+            color: #1a1a2e;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px 100px;
+        }
+
+        .ticket-wrapper {
+            width: 100%;
+            max-width: 800px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+        }
+
+        .ticket-box {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            min-height: 280px;
+        }
+
+        .ticket-box::before,
+        .ticket-box::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #e8eaf6;
+            border-radius: 50%;
+            right: 235px;
+            z-index: 2;
+        }
+
+        .ticket-box::before {
+            top: -15px;
+        }
+
+        .ticket-box::after {
+            bottom: -15px;
+        }
+
+        .t-main {
+            flex: 1;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px dashed #e2e8f0;
+            position: relative;
+        }
+
+        .t-stub {
+            width: 250px;
+            background: #f8fafc;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .t-header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 24px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .t-header.Cancelled {
+            background: #ff4d6d;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .brand i {
+            color: #ff9f1c;
+        }
+
+        .service-type {
+            background: rgba(255, 159, 28, 0.2);
+            color: #ff9f1c;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .t-header.Cancelled .service-type {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .t-details {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .cancelled-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 120px;
+            font-weight: 900;
+            color: rgba(255, 77, 109, 0.08);
+            /* Faint red */
+            pointer-events: none;
+            z-index: 0;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .row-wrap {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 20px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .t-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .t-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .t-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .route-visual {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            padding: 24px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            z-index: 1;
+            position: relative;
+        }
+
+        .city-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .city-code {
+            font-size: 28px;
+            font-weight: 900;
+            color: #1a1a2e;
+            line-height: 1;
+        }
+
+        .city-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .route-path {
+            flex: 1;
+            margin: 0 20px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transform: translateY(-8px);
+        }
+
+        .route-path-line {
+            width: 100%;
+            height: 2px;
+            border-bottom: 2px dashed #cbd5e1;
+        }
+
+        .route-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #f8fafc;
+            padding: 0 10px;
+            color: #ff9f1c;
+            font-size: 18px;
+        }
+
+        .stub-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #1a1a2e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .qr-wrapper {
+            background: #fff;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .qr-wrapper img {
+            display: block;
+            width: 130px;
+            height: 130px;
+            border-radius: 4px;
+        }
+
+        .stub-price {
+            text-align: center;
+            width: 100%;
+            padding-top: 20px;
+            border-top: 1px dashed #cbd5e1;
+        }
+
+        .price-val {
+            font-size: 24px;
+            font-weight: 900;
+            color: #1a1a2e;
+        }
+
+        .terms-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .terms-header {
+            font-size: 14px;
+            font-weight: 900;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terms-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+        }
+
+        .terms-list li {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .terms-list li i {
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .status-Confirmed {
+            color: #059669;
+        }
+
+        .status-Cancelled {
+            color: #e11d48;
+        }
+
+        .status-Payment-Pending {
+            color: #ea580c;
+        }
+
+        .cancelled-banner {
+            background: #ff4d6d;
+            color: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            font-weight: 800;
+            text-decoration: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            border: none;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .btn-print {
+            background: #1a1a2e;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(26, 26, 46, 0.3);
+        }
+
+        .btn-back {
+            background: #fff;
+            color: #1a1a2e;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+                min-height: auto;
+                display: block;
+            }
+
+            .ticket-wrapper {
+                box-shadow: none;
+                filter: none;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .ticket-box {
+                border: 1px solid #cbd5e1;
+            }
+
+            .ticket-box::before,
+            .ticket-box::after {
+                display: none;
+            }
+
+            .terms-box {
+                border: 1px solid #cbd5e1;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ticket-box {
+                flex-direction: column;
+            }
+
+            .ticket-box::before,
+            .ticket-box::after {
+                display: none;
+            }
+
+            .t-main {
+                border-right: none;
+                border-bottom: 2px dashed #e2e8f0;
+            }
+
+            .t-stub {
+                width: 100%;
+                box-sizing: border-box;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .terms-list {
+                grid-template-columns: 1fr;
+            }
+
+            .qr-wrapper {
+                margin-bottom: 0;
+            }
+
+            .stub-price {
+                width: auto;
+                border: none;
+                padding-top: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ticket-wrapper">
+        <div class="ticket-box">
+            <div class="t-main">
+                <div class="t-header {{ b.status }}">
+                    <div class="brand">
+                        <i class="fas fa-plane"></i> ASRS TRAVEL
+                    </div>
+                    <div class="service-type">
+                        {{ b.service_type }} TICKET
+                    </div>
+                </div>
+
+                <div class="t-details">
+                    {% if b.status == 'Cancelled' %}
+                    <div class="cancelled-watermark">CANCELLED</div>
+                    {% endif %}
+
+                    <div class="row-wrap">
+                        <div class="t-group">
+                            <div class="t-label">Passenger(s)</div>
+                            <div class="t-val" style="font-size: 13px; line-height:1.4;">{{
+                                b.traveler_names.replace(',', ', ') if b.traveler_names else user_name }}</div>
+                        </div>
+                        <div class="t-group">
+                            <div class="t-label">Booking Reference</div>
+                            <div class="t-val" style="color:#ff9f1c;">{{ b.booking_ref }}</div>
+                        </div>
+                        <div class="t-group">
+                            <div class="t-label">Travel Date</div>
+                            <div class="t-val">{{ b.travel_date or 'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    {% if b.from_city and b.to_city %}
+                    <div class="route-visual">
+                        <div class="city-block">
+                            <div class="city-code">{{ b.from_city[:3]|upper }}</div>
+                            <div class="city-name">{{ b.from_city }}</div>
+                        </div>
+
+                        <div class="route-path">
+                            <div class="route-path-line"></div>
+                            <div class="route-icon">
+                                {% if b.service_type == 'Flight' %}
+                                <i class="fas fa-plane"></i>
+                                {% elif b.service_type == 'Train' %}
+                                <i class="fas fa-train"></i>
+                                {% elif b.service_type == 'Bus' %}
+                                <i class="fas fa-bus"></i>
+                                {% else %}
+                                <i class="fas fa-arrow-right"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="city-block">
+                            <div class="city-code">{{ b.to_city[:3]|upper }}</div>
+                            <div class="city-name">{{ b.to_city }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="height: 40px;"></div>
+                    {% endif %}
+
+                    <div class="row-wrap">
+                        <div class="t-group">
+                            <div class="t-label">Service Item</div>
+                            <div class="t-val">{{ b.item_name }}</div>
+                        </div>
+                        <div class="t-group">
+                            <div class="t-label">{% if b.service_type == 'Flight' %}Seat{% else %}Class{% endif %}</div>
+                            <div class="t-val">{{ b.seat_room or b.class_type or 'Standard' }}</div>
+                        </div>
+                        <div class="t-group">
+                            <div class="t-label">Booking Status</div>
+                            <div class="t-val status-{{ b.status|replace(' ', '-') }}">
+                                {{ b.status|upper }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="t-stub">
+                <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    <div class="stub-title">BOARDING PASS</div>
+                    <div class="qr-wrapper">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ b.booking_ref }}&color=1a1a2e&bgcolor=ffffff"
+                            alt="QR Code">
+                    </div>
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 2px;">{{
+                        b.booking_ref }}</div>
+                </div>
+
+                <div class="stub-price">
+                    <div class="t-label" style="margin-bottom: 2px;">Total Paid</div>
+                    <div class="price-val">&#8377;{{ "{:,}".format(b.price) }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if b.status == 'Cancelled' %}
+        <div class="cancelled-banner">
+            <i class="fas fa-exclamation-triangle"></i> THIS BOARDING PASS HAS BEEN CANCELLED AND IS NO LONGER VALID FOR
+            TRAVEL.
+        </div>
+        {% endif %}
+
+        <div class="terms-box">
+            <div class="terms-header">
+                <i class="fas fa-shield-alt" style="color:#ff9f1c;"></i> General Terms &amp; Conditions
+            </div>
+            <ul class="terms-list">
+                <li><i class="fas fa-check-circle"></i> <span><strong>Identification:</strong> Passengers must carry a
+                        valid government-issued photo ID (Passport, Aadhar, Voter ID, etc.) matching the passenger name
+                        for boarding.</span></li>
+                <li><i class="fas fa-check-circle"></i> <span><strong>Reporting Time:</strong> Please report to the
+                        boarding point/gate at least 45 minutes prior to the scheduled departure time.</span></li>
+                <li><i class="fas fa-check-circle"></i> <span><strong>Baggage:</strong> Standard free baggage allowance
+                        applies. Extra baggage will be charged as per operator guidelines. Dangerous goods are strictly
+                        prohibited.</span></li>
+                <li><i class="fas fa-check-circle"></i> <span><strong>Cancellation Policy:</strong> A 20% cancellation
+                        fee applies if cancelled before departure. No refunds are provided for no-shows.</span></li>
+                <li><i class="fas fa-check-circle"></i> <span><strong>Delays/Changes:</strong> ASRS Travel is a booking
+                        facilitator. Operators reserve the right to change schedules, routes, or cancel services due to
+                        unforeseen circumstances.</span></li>
+                <li><i class="fas fa-check-circle"></i> <span><strong>Contact Support:</strong> For queries, support, or
+                        complaints, please reach out via your ASRS Travel Dashboard or Email Support.</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> Download / Print</button>
+        <a href="{{ url_for('manage_booking', booking_ref=b.booking_ref) }}" class="btn btn-back"><i
+                class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+</body>
+
+</html>

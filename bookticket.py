@@ -85,8 +85,16 @@ def all_trains():
 #  Carriers / Operators
 # ────────────────────────────────────────────────────────
 AIRLINES = ["IndiGo", "Air India", "SpiceJet", "Vistara", "Akasa Air", "GoFirst"]
-BUS_OPS  = ["Volt Travels", "Orange Sector", "Highway Nova", "ZipBus", "Urban Link",
-            "KSRTC Premium", "MSRTC Shivneri"]
+BUS_OPS  = [
+    "Volt Travels", "Orange Sector", "Highway Nova", "ZipBus", "Urban Link",
+    "KSRTC Premium", "MSRTC Shivneri", "VRL Travels", "KPN Travels",
+    "SRM Travels", "Kallada Travels", "Parveen Travels", "Neeta Tours & Travels",
+    "Kesineni Travels (KRL)", "Eagle Travels", "SVR Travels", "Orange Travels",
+    "Dolphin Travel House", "IntrCity SmartBus", "RedBus Travels", "Pinkbus",
+    "National Express / NTHO", "M S Jogeshwari Enterprises", "BTP Buses",
+    "Maru Travels", "PMR Express", "Kerala State Road Transport Corporation (KSRTC)",
+    "State RTCs"
+]
 HOTELS   = ["The Almond Sands", "Aqueous Retreat", "Heritage Pods",
             "The Velvet Sector", "Skyline Grand", "Quantum Plaza"]
 # Full verified Unsplash hotel photo URLs (no broken partial IDs)
@@ -538,6 +546,7 @@ def book():
         item_id      = request.args.get('id',    ''),
         dep          = request.args.get('dep',   '--:--'),
         arr          = request.args.get('arr',   '--:--'),
+        date         = request.args.get('date',  'Unknown Date'),
         price        = int(request.args.get('price', 0)),
         src          = request.args.get('src',   '--'),
         dst          = request.args.get('dst',   '--'),
@@ -682,6 +691,75 @@ def upload_photo():
     return jsonify({'success': True, 'url': photo_url})
 
 
+# ── Booking Management (User Area) ────────────────────────
+@app.route("/booking/<booking_ref>")
+@login_required
+def manage_booking(booking_ref):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM bookings WHERE booking_ref = ? AND user_id = (SELECT id FROM users WHERE username = ?)",
+            (booking_ref, session['user'])
+        ).fetchone()
+        if not row:
+            flash("Booking not found.", "error")
+            return redirect(url_for('profile'))
+        b = dict(row)
+    return render_template("manage_booking.html", b=b)
+
+@app.route("/booking/<booking_ref>/cancel", methods=['GET', 'POST'])
+@login_required
+def cancel_booking(booking_ref):
+    username = session['user']
+    with get_db() as conn:
+        user = dict(conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone())
+        row = conn.execute("SELECT * FROM bookings WHERE booking_ref = ? AND user_id = ?", (booking_ref, user['id'])).fetchone()
+        if not row:
+            flash("Booking not found.", "error")
+            return redirect(url_for('profile'))
+        b = dict(row)
+
+    if request.method == 'POST':
+        with get_db() as conn:
+            conn.execute("UPDATE bookings SET status = 'Cancelled' WHERE booking_ref = ? AND user_id = ?", (booking_ref, user['id']))
+            conn.commit()
+        flash("Booking cancelled successfully.", "success")
+        return redirect(url_for('manage_booking', booking_ref=booking_ref))
+
+    deduction = int(b['price'] * 0.20)
+    refund = b['price'] - deduction
+    return render_template("cancel_booking.html", b=b, deduction=deduction, refund=refund)
+
+@app.route("/booking/<booking_ref>/ticket")
+@login_required
+def download_ticket(booking_ref):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM bookings WHERE booking_ref = ? AND user_id = (SELECT id FROM users WHERE username = ?)",
+            (booking_ref, session['user'])
+        ).fetchone()
+        if not row:
+            flash("Booking not found.", "error")
+            return redirect(url_for('profile'))
+        b = dict(row)
+    if b['service_type'] == 'Hotel':
+        return render_template("welcome_card.html", b=b, user_name=session['user'])
+    return render_template("ticket.html", b=b, user_name=session['user'])
+
+@app.route("/booking/<booking_ref>/payment")
+@login_required
+def payment_details(booking_ref):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM bookings WHERE booking_ref = ? AND user_id = (SELECT id FROM users WHERE username = ?)",
+            (booking_ref, session['user'])
+        ).fetchone()
+        if not row:
+            flash("Booking not found.", "error")
+            return redirect(url_for('profile'))
+        b = dict(row)
+    return render_template("payment_details.html", b=b, user_name=session['user'])
+
+
 # ── Save Booking (called from booking.html after payment) ──
 @app.route("/api/book/save", methods=['POST'])
 @login_required
@@ -696,12 +774,17 @@ def save_booking():
             return jsonify({'success': False, 'message': 'User not found.'})
 
         try:
+            conn.execute("ALTER TABLE bookings ADD COLUMN traveler_names TEXT")
+        except:
+            pass
+
+        try:
             conn.execute("""
                 INSERT OR IGNORE INTO bookings
                 (booking_ref, user_id, service_type, item_name,
                  from_city, to_city, travel_date, seat_room,
-                 passengers, class_type, price, pay_method, status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 passengers, traveler_names, class_type, price, pay_method, status)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 data.get('booking_ref',''),
                 user['id'],
@@ -712,6 +795,7 @@ def save_booking():
                 data.get('travel_date',''),
                 data.get('seat_room',''),
                 data.get('passengers', 1),
+                data.get('traveler_names', ''),
                 data.get('class_type',''),
                 int(data.get('price', 0)),
                 data.get('pay_method','UPI'),

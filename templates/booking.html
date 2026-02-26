@@ -313,7 +313,36 @@
                     <span class="review-label">{% if type == 'Hotel' %}Room{% else %}Seat{% endif %}</span>
                     <span class="review-value" id="review-seat-val">—</span>
                 </div>
+
                 <div class="review-divider"></div>
+
+                <!-- Travelers Dynamic Form -->
+                <div id="travelers-section" style="margin-top:20px;display:none;">
+                    <h3 style="margin-bottom:12px;font-size:14px;color:#ff9f1c;"><i class="fas fa-users"></i> Traveler
+                        Details</h3>
+                    <div id="travelers-list"></div>
+                </div>
+
+                <div class="review-divider"></div>
+
+                <!-- Coupon Section -->
+                <div class="coupon-section" style="margin:20px 0;">
+                    <h3 style="margin-bottom:12px;font-size:14px;color:#ff9f1c;"><i class="fas fa-tags"></i> Have a
+                        promo code?</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="coupon-code" placeholder="e.g. WELCOME10, TRAVEL20, ASRS50"
+                            style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid rgba(255,159,28, .5); background:rgba(0,0,0,0.2); color:#fff; font-family:inherit; font-weight:700;">
+                        <button class="btn btn-ghost" onclick="applyCoupon()" style="padding:10px 20px;">Apply</button>
+                    </div>
+                    <div id="coupon-msg" style="font-size:12px; margin-top:8px; min-height:14px;"></div>
+                </div>
+
+                <div class="review-divider"></div>
+
+                <div class="review-row discount-row" id="discount-row" style="display:none; color:#06d6a0;">
+                    <span class="review-label" style="color:#06d6a0;">Discount Applied</span>
+                    <span class="review-value" id="review-discount">-₹0</span>
+                </div>
                 <div class="review-row total-row">
                     <span class="review-label">Total Amount</span>
                     <span class="review-value total-price" id="review-total">₹{{ price }}</span>
@@ -451,7 +480,8 @@
 
                 <div class="confirm-details">
                     <div class="confirm-row"><span>Booking ID</span><strong id="confirm-id"></strong></div>
-                    <div class="confirm-row"><span>Traveller</span><strong>{{ session_user }}</strong></div>
+                    <div class="confirm-row"><span>Traveller(s)</span><strong id="confirm-traveller">{{ session_user
+                            }}</strong></div>
                     <div class="confirm-row"><span>{{ type }}</span><strong>{{ name }}</strong></div>
                     {% if type != 'Hotel' %}
                     <div class="confirm-row"><span>Route</span><strong>{{ src }} → {{ dst }}</strong></div>
@@ -480,21 +510,34 @@
     <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
     <script>
         /* ─── State ─────────────────────────── */
-        let selectedSeat = null;
-        let selectedPrice = parseInt("{{ price }}");
+        let selectedSeats = [];
+        let basePriceSum = 0;
+        let discountAmt = 0;
+        let selectedPrice = parseInt("{{ price }}") || 0;
         let selectedPayMethod = 'upi';
+        const isHotel = '{{ type }}' === 'Hotel';
 
         /* ─── Seat Selection ─────────────────── */
         document.querySelectorAll('.seat.available, .seat.window, .seat.ladies, .berth-box.available, .berth-box.ladies').forEach(s => {
             s.addEventListener('click', () => {
+                const sId = s.dataset.seat;
+                if (s.classList.contains('selected')) {
+                    s.classList.remove('selected');
+                    selectedSeats = selectedSeats.filter(id => id !== sId);
+
+                    const prev = s.classList.contains('window') || s.classList.contains('ladies');
+                    if (!prev) s.classList.add('available');
+                } else {
+                    s.classList.add('selected');
+                    s.classList.remove('available');
+                    selectedSeats.push(sId);
+                }
+
+                basePriceSum = 0;
                 document.querySelectorAll('.seat.selected, .berth-box.selected').forEach(x => {
-                    x.classList.remove('selected');
-                    const prev = x.classList.contains('window') || x.classList.contains('ladies');
-                    if (!prev) x.classList.add('available');
+                    basePriceSum += parseInt(x.dataset.price || 0);
                 });
-                s.classList.add('selected');
-                selectedSeat = s.dataset.seat;
-                selectedPrice = parseInt(s.dataset.price);
+                applyCoupon();
                 updateSelectionBar();
             });
         });
@@ -503,24 +546,76 @@
         window.selectRoom = (card) => {
             document.querySelectorAll('.room-card').forEach(c => c.classList.remove('room-picked'));
             card.classList.add('room-picked');
-            selectedSeat = card.dataset.room;
-            selectedPrice = parseInt(card.dataset.price);
+            selectedSeats = [card.dataset.room];
+            basePriceSum = parseInt(card.dataset.price || 0);
+            applyCoupon();
             updateSelectionBar();
         };
 
         function updateSelectionBar() {
-            document.getElementById('sel-label').textContent = '{{ type == "Hotel" and "Room" or "Seat" }}: ' + selectedSeat;
-            document.getElementById('sel-detail').textContent = 'Tap "Continue" to proceed';
+            document.getElementById('sel-label').textContent = '{{ type == "Hotel" and "Room" or "Seats" }}: ' + (selectedSeats.join(', ') || 'None');
+            document.getElementById('sel-detail').textContent = selectedSeats.length ? 'Tap "Continue" to proceed' : 'Please select at least one.';
             document.getElementById('sel-price').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
-            document.getElementById('btn-next-1').disabled = false;
-            document.getElementById('btn-next-1').removeAttribute('disabled');
+
+            const btn = document.getElementById('btn-next-1');
+            if (selectedSeats.length > 0) {
+                btn.disabled = false;
+                btn.removeAttribute('disabled');
+            } else {
+                btn.disabled = true;
+                btn.setAttribute('disabled', 'true');
+            }
         }
 
+        window.applyCoupon = () => {
+            const codeBox = document.getElementById('coupon-code');
+            const code = codeBox ? codeBox.value.toUpperCase().trim() : '';
+            const msg = document.getElementById('coupon-msg');
+            let pct = 0;
+
+            if (code === 'ASRS50') pct = 0.5;
+            else if (code === 'TRAVEL20') pct = 0.2;
+            else if (code === 'WELCOME10') pct = 0.1;
+
+            if (code && pct === 0) {
+                if (msg) { msg.textContent = 'Invalid Coupon Code'; msg.style.color = '#ff4d6d'; }
+                discountAmt = 0;
+            } else if (code && pct > 0) {
+                if (msg) { msg.textContent = 'Awesome! Code Applied Successfully.'; msg.style.color = '#06d6a0'; }
+                discountAmt = Math.floor(basePriceSum * pct);
+            } else {
+                if (msg) msg.textContent = '';
+                discountAmt = 0;
+            }
+
+            selectedPrice = basePriceSum - discountAmt;
+
+            const dRow = document.getElementById('discount-row');
+            if (dRow) {
+                if (discountAmt > 0) {
+                    dRow.style.display = 'flex';
+                    document.getElementById('review-discount').textContent = '-₹' + discountAmt.toLocaleString();
+                } else {
+                    dRow.style.display = 'none';
+                }
+            }
+            const pTot = document.getElementById('review-total');
+            if (pTot) pTot.textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+        };
+
         /* ─── Step Navigation ─────────────────── */
-        let pendingBookId = null;   // set when user reaches payment step
+        let pendingBookId = null;
 
         window.goToStep = (n) => {
-            if (n === 2 && !selectedSeat) { alert('Please select a seat / room first.'); return; }
+            if (n === 2 && selectedSeats.length === 0) { alert('Please select a seat / room first.'); return; }
+            if (n === 3) {
+                // Ensure all traveler names are filled
+                let allFilled = true;
+                const reqInputs = document.querySelectorAll('.trav-name, .trav-age, .trav-phone, .trav-email');
+                reqInputs.forEach(inp => { if (!inp.value.trim() && inp.hasAttribute('required')) allFilled = false; });
+                if (!allFilled) { alert('Please fill missing traveler details (Name, Age, Phone, Email).'); return; }
+            }
+
             for (let i = 1; i <= 4; i++) {
                 document.getElementById(`step-${i}`)?.classList.toggle('hidden', i !== n);
                 const ind = document.getElementById(`step-ind-${i}`);
@@ -528,14 +623,91 @@
             }
             if (n === 2) {
                 document.getElementById('review-seat-row').style.display = '';
-                document.getElementById('review-seat-val').textContent = selectedSeat;
-                document.getElementById('review-total').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
+                document.getElementById('review-seat-val').textContent = selectedSeats.join(', ');
+                applyCoupon();
+
+                const tList = document.getElementById('travelers-list');
+                const tSect = document.getElementById('travelers-section');
+                if (tList) tList.innerHTML = '';
+
+                if (!isHotel) {
+                    selectedSeats.forEach((seat, idx) => {
+                        const initVal = (idx === 0) ? '{{ session_user }}' : '';
+                        tList.innerHTML += `
+                            <div style="margin-bottom:20px; background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; border:1px solid rgba(255,159,28,0.2);">
+                                <label style="font-size:13px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; display:block;">Traveler ${idx + 1} (Seat ${seat})</label>
+                                
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
+                                    <div>
+                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Full Name *</label>
+                                        <input type="text" class="trav-name" placeholder="Enter full name" value="${initVal}" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Age *</label>
+                                        <input type="number" class="trav-age" placeholder="e.g. 28" min="1" max="100" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
+                                    </div>
+                                </div>
+                                
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
+                                    <div>
+                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Gender</label>
+                                        <select class="trav-gender" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;appearance:auto;cursor:pointer;">
+                                            <option value="Male" style="color:#000">Male</option>
+                                            <option value="Female" style="color:#000">Female</option>
+                                            <option value="Other" style="color:#000">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Phone Number *</label>
+                                        <input type="tel" class="trav-phone" placeholder="e.g. +91 9876543210" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Email Address *</label>
+                                    <input type="email" class="trav-email" placeholder="example@gmail.com" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
+                                </div>
+                            </div>
+                        `;
+                    });
+                    tSect.style.display = 'block';
+                } else {
+                    tSect.style.display = 'none';
+                }
             }
             if (n === 3) {
                 document.getElementById('pay-amount-display').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
-                // ── Save as "Payment Pending" when user reaches payment step ──
                 if (!pendingBookId) {
                     pendingBookId = 'KNY-' + Math.floor(Math.random() * 900000 + 100000);
+
+                    let tNames = [];
+                    const tNodes = document.querySelectorAll('.trav-name');
+                    const ages = document.querySelectorAll('.trav-age');
+                    const genders = document.querySelectorAll('.trav-gender');
+                    const phones = document.querySelectorAll('.trav-phone');
+                    const emails = document.querySelectorAll('.trav-email');
+
+                    tNodes.forEach((inp, i) => {
+                        let nm = inp.value.trim();
+                        let a = ages[i] ? ages[i].value.trim() : '';
+                        let g = genders[i] ? genders[i].value : '';
+                        let p = phones[i] ? phones[i].value.trim() : '';
+                        let e = emails[i] ? emails[i].value.trim() : '';
+
+                        let extras = [];
+                        if (a || g) extras.push(`${a ? a + 'y ' : ''}${g}`);
+                        if (p) extras.push(`Ph: ${p}`);
+                        if (e) extras.push(e);
+
+                        let fullLine = nm;
+                        if (extras.length > 0) {
+                            fullLine += ` (${extras.join(' | ')})`;
+                        }
+                        tNames.push(fullLine);
+                    });
+
+                    if (tNames.length === 0) tNames = ['{{ session_user }}'];
+
                     fetch('/api/book/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -545,8 +717,10 @@
                             item_name: '{{ name }}',
                             from_city: '{{ src }}',
                             to_city: '{{ dst }}',
-                            travel_date: '{{ dep }}',
-                            seat_room: selectedSeat || '',
+                            travel_date: '{{ type }}' === 'Hotel' ? '{{ date }}' : '{{ date }} | {{ dep }} - {{ arr }}',
+                            seat_room: selectedSeats.join(', '),
+                            passengers: isHotel ? 1 : selectedSeats.length,
+                            traveler_names: tNames.join(', '),
                             class_type: '{{ cls }}',
                             price: selectedPrice,
                             pay_method: 'Pending',
@@ -592,15 +766,23 @@
             payBtn.disabled = true;
             setTimeout(() => {
                 const bookId = pendingBookId || ('KNY-' + Math.floor(Math.random() * 900000 + 100000));
+
+                // Show confirmation details
                 document.getElementById('confirm-id').textContent = bookId;
-                document.getElementById('confirm-seat').textContent = selectedSeat || '—';
+                document.getElementById('confirm-seat').textContent = selectedSeats.join(', ') || '—';
                 document.getElementById('confirm-amount').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
                 document.getElementById('confirm-payment').textContent = {
                     upi: 'UPI / Online', card: 'Card Payment', cash: 'Cash at Counter'
                 }[selectedPayMethod];
+
+                let tNames = [];
+                document.querySelectorAll('.trav-name').forEach(inp => tNames.push(inp.value.trim()));
+                if (tNames.length > 0) {
+                    document.getElementById('confirm-traveller').innerHTML = tNames.join('<br>');
+                }
+
                 goToStep(4);
 
-                // ── Upgrade from Payment Pending → Confirmed ──
                 if (pendingBookId) {
                     fetch('/api/book/update-status', {
                         method: 'POST',
@@ -608,7 +790,7 @@
                         body: JSON.stringify({ booking_ref: pendingBookId, status: 'Confirmed' })
                     }).catch(() => { });
                 } else {
-                    // fallback: save fresh if somehow pending was not set
+                    if (tNames.length === 0) tNames = ['{{ session_user }}'];
                     fetch('/api/book/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -618,8 +800,10 @@
                             item_name: '{{ name }}',
                             from_city: '{{ src }}',
                             to_city: '{{ dst }}',
-                            travel_date: '{{ dep }}',
-                            seat_room: selectedSeat || '',
+                            travel_date: '{{ type }}' === 'Hotel' ? '{{ date }}' : '{{ date }} | {{ dep }} - {{ arr }}',
+                            seat_room: selectedSeats.join(', '),
+                            passengers: isHotel ? 1 : selectedSeats.length,
+                            traveler_names: tNames.join(', '),
                             class_type: '{{ cls }}',
                             price: selectedPrice,
                             pay_method: { upi: 'UPI/Online', card: 'Card', cash: 'Cash' }[selectedPayMethod] || 'UPI',

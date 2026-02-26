@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt : {{ b.booking_ref }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #0d0f1a;
+            color: #e8eaf6;
+            font-family: 'Inter', monospace;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .receipt {
+            background: #fff;
+            color: #111;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            position: relative;
+        }
+
+        .receipt::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background-image: radial-gradient(circle, #fff 4px, transparent 4px);
+            background-size: 16px 16px;
+            background-repeat: repeat-x;
+        }
+
+        .r-header {
+            text-align: center;
+            border-bottom: 2px dashed #999;
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+
+        .r-logo {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .r-meta {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .r-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .r-row.bold {
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .r-row.total {
+            font-weight: 900;
+            font-size: 22px;
+            border-top: 2px dashed #999;
+            padding-top: 24px;
+            margin-top: 12px;
+        }
+
+        .btn-back {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            color: #fff;
+            background: #3a86ff;
+            padding: 12px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            font-family: 'Inter', sans-serif;
+            transition: background .2s;
+        }
+
+        .btn-back:hover {
+            background: #2563eb;
+        }
+
+        [data-theme="light"] body {
+            background: #f0f2f8;
+        }
+    </style>
+</head>
+
+<body data-theme="{{ session.get('theme', 'dark') }}">
+    <script>
+        (function () {
+            var saved = localStorage.getItem('kyt-theme') || 'dark';
+            document.body.setAttribute('data-theme', saved);
+        })();
+    </script>
+    <div>
+        <div class="receipt">
+            <div class="r-header">
+                <div class="r-logo">ASRS TRAVEL</div>
+                <div class="r-meta">Tax Invoice / Receipt</div>
+            </div>
+
+            <div class="r-row">
+                <span>Date</span>
+                <span>{{ b.booked_at }}</span>
+            </div>
+            <div class="r-row">
+                <span>Transaction Ref</span>
+                <span>{{ b.booking_ref|upper }}</span>
+            </div>
+            <div class="r-row">
+                <span>Customer</span>
+                <span>{{ user_name }}</span>
+            </div>
+            <div class="r-row" style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px dashed #999;">
+                <span>Payment Method</span>
+                <span>{{ b.pay_method }}</span>
+            </div>
+
+            <div class="r-row bold">
+                <span>Item</span>
+                <span>Amount</span>
+            </div>
+            <div class="r-row">
+                <span>{{ b.service_type }} - {{ b.item_name }}</span>
+                <span>&#8377;{{ "{:,}".format(b.price) }}</span>
+            </div>
+
+            <div class="r-row total">
+                <span>TOTAL PAID</span>
+                <span>&#8377;{{ "{:,}".format(b.price) }}</span>
+            </div>
+
+            <div style="text-align:center; font-size:12px; color:#666; margin-top:30px;">
+                Thank you for choosing ASRS Travel!<br>Have a safe journey.
+            </div>
+        </div>
+        <a href="{{ url_for('manage_booking', booking_ref=b.booking_ref) }}" class="btn-back">Done</a>
+    </div>
+</body>
+
+</html>

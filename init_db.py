@@ -347,6 +347,7 @@ def init():
             travel_date  TEXT,
             seat_room    TEXT,
             passengers   INTEGER DEFAULT 1,
+            traveler_names TEXT,
             class_type   TEXT,
             price        INTEGER DEFAULT 0,
             pay_method   TEXT DEFAULT 'UPI',
@@ -355,6 +356,8 @@ def init():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
+    try: cur.execute("ALTER TABLE bookings ADD COLUMN traveler_names TEXT")
+    except: pass
 
     # ── Trains table ─────────────────────────────────────────────
     cur.execute("DROP TABLE IF EXISTS trains")

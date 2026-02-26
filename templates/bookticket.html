@@ -10,134 +10,72 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ── Welcome Overlay ─────────────────────── */
-        #welcome-overlay {
+        /* ── Minimal Welcome Toast ───────────────────── */
+        #welcome-toast {
             position: fixed;
-            inset: 0;
+            bottom: 30px;
+            right: 30px;
             z-index: 9999;
+            background: #1a0f00;
+            border: 1px solid rgba(255, 159, 28, .5);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #welcome-toast.show {
+            transform: translateX(0);
+        }
+
+        .wt-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .wt-text {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.82);
-            backdrop-filter: blur(6px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .4s;
         }
 
-        #welcome-overlay.show {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        #confetti-canvas {
-            position: fixed;
-            inset: 0;
-            z-index: 9998;
-            pointer-events: none;
-        }
-
-        .wc-card {
-            background: linear-gradient(145deg, #1a0f00, #2d1800);
-            border: 1px solid rgba(255, 159, 28, .3);
-            border-radius: 28px;
-            padding: 52px 60px 44px;
-            text-align: center;
-            max-width: 460px;
-            width: 90%;
-            box-shadow: 0 0 80px rgba(255, 159, 28, .25), 0 32px 80px rgba(0, 0, 0, .6);
-            animation: wc-pop .55s cubic-bezier(.34, 1.56, .64, 1) both;
-        }
-
-        @keyframes wc-pop {
-            from {
-                transform: scale(.7) translateY(40px);
-                opacity: 0
-            }
-
-            to {
-                transform: scale(1) translateY(0);
-                opacity: 1
-            }
-        }
-
-        .wc-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #ff9f1c;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 38px;
-            font-weight: 900;
-            color: #fff;
-            margin: 0 auto 22px;
-            box-shadow: 0 0 0 6px rgba(255, 159, 28, .25), 0 8px 32px rgba(255, 159, 28, .4);
-            animation: pulse-av 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-av {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 6px rgba(255, 159, 28, .25), 0 8px 32px rgba(255, 159, 28, .4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 14px rgba(255, 159, 28, .08), 0 8px 40px rgba(255, 159, 28, .55);
-            }
-        }
-
-        .wc-hello {
+        .wt-title {
+            color: #ff9f1c;
             font-size: 13px;
             font-weight: 800;
-            color: rgba(255, 159, 28, .8);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
+            letter-spacing: 1px;
         }
 
-        .wc-name {
-            font-size: 34px;
-            font-weight: 900;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .wc-name em {
-            color: #ff9f1c;
-            font-style: normal;
-        }
-
-        .wc-sub {
-            font-size: 14px;
-            color: rgba(255, 255, 255, .5);
-            line-height: 1.7;
-            margin-bottom: 32px;
-        }
-
-        .wc-btn {
+        .wt-name {
+            color: #e8eaf6;
             font-size: 15px;
-            font-weight: 800;
-            padding: 13px 40px;
-            background: linear-gradient(135deg, #ff9f1c, #ff5500);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 6px 24px rgba(255, 159, 28, .4);
-            transition: transform .18s, box-shadow .18s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-family: inherit;
+            font-weight: 600;
+            margin-top: 2px;
         }
 
-        .wc-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 32px rgba(255, 159, 28, .55);
+        .wt-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, .5);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+        }
+
+        .wt-close:hover {
+            color: #fff;
         }
 
         /* ── Avatar chip in header ────────────────── */
@@ -401,22 +339,15 @@
     </div>
     {% endif %}
 
-    <!-- ─── Welcome Overlay (fires once on login) ─ -->
+    <!-- ─── Minimal Welcome Toast (fires once on login) ─ -->
     {% if just_logged_in %}
-    <canvas id="confetti-canvas"></canvas>
-    <div id="welcome-overlay" class="show">
-        <div class="wc-card">
-            <div class="wc-avatar" data-color="{{ avatar_color }}">{{ user_name[0].upper() }}</div>
-            <div class="wc-hello">Welcome aboard</div>
-            <div class="wc-name">Hey, <em>{{ user_name }}</em>!</div>
-            <div class="wc-sub">
-                Your ASRS Travel account is all set.<br>
-                Flights, hotels, trains &amp; buses — all at your fingertips. ✈️
-            </div>
-            <button class="wc-btn" onclick="closeWelcome()">
-                <i class="fas fa-rocket"></i> Let's Explore
-            </button>
+    <div id="welcome-toast">
+        <div class="wt-avatar" data-color="{{ avatar_color }}">{{ user_name[0].upper() }}</div>
+        <div class="wt-text">
+            <span class="wt-title">Welcome Aboard</span>
+            <span class="wt-name">Hey, {{ user_name }}!</span>
         </div>
+        <button class="wt-close" onclick="closeWelcomeToast()"><i class="fas fa-times"></i></button>
     </div>
     {% endif %}
 
@@ -621,28 +552,52 @@
     </div>
 
     <!-- ─── Promotions ──────────────────────── -->
-    <p class="section-label">Exclusive Deals</p>
+    <p class="section-label">Exclusive Deals & Offers</p>
     <div class="promos">
         <div class="promo-card">
             <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80"
                 alt="Flights">
             <div class="promo-overlay">
-                <p>✈ Flat 20% OFF on First Flight</p>
+                <p>✈ Use code <strong>TRAVEL20</strong> for 20% OFF</p>
             </div>
         </div>
         <div class="promo-card">
             <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
                 alt="Hotels">
             <div class="promo-overlay">
-                <p>🏨 Luxury Hotels from ₹1,999</p>
+                <p>🏨 Flash Sale! Code <strong>ASRS50</strong> for 50% OFF</p>
             </div>
         </div>
         <div class="promo-card">
             <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"
                 alt="Goa">
             <div class="promo-overlay">
-                <p>🌊 Goa Holidays – Best Deals</p>
+                <p>🌊 New here? Code <strong>WELCOME10</strong> for 10% OFF</p>
             </div>
+        </div>
+    </div>
+
+    <!-- ─── Terms & Conditions ──────────────────── -->
+    <div style="padding: 24px 4%; max-width: 1400px; margin: 40px auto 20px;">
+        <p
+            style="font-size:18px; font-weight:800; color:var(--text); margin-bottom:12px; font-family:'Outfit', sans-serif;">
+            Terms &amp; Conditions</p>
+        <div
+            style="background:var(--card-bg); border-radius:12px; border:1px solid var(--border); padding:24px; font-size:13px; color:var(--text); opacity:0.8; line-height:1.6; box-shadow:0 4px 20px var(--shadow);">
+            <ul style="margin:0; padding-left:20px;">
+                <li style="margin-bottom:8px;"><strong>Coupon Usage:</strong> Promotional codes (ASRS50, TRAVEL20,
+                    WELCOME10) apply only to the base fare of the selected travel service or lodging. Only one code may
+                    be active per transaction.</li>
+                <li style="margin-bottom:8px;"><strong>Cancellations &amp; Refunds:</strong> You may cancel any active
+                    booking from your profile dashboard. A standard 20% deduction fee is retained by ASRS Travel upon
+                    cancellation. The remainder is immediately credited as a refund.</li>
+                <li style="margin-bottom:8px;"><strong>Travel Documents:</strong> E-Tickets and Welcome Cards can be
+                    downloaded in PDF format post-booking. These digital stubs alongside a registered physical photo ID
+                    must be available during boarding or check-in.</li>
+                <li><strong>Voice Assistance:</strong> Microphone access must be granted in your browser for the
+                    accessibility controls to function. Voice data is processed securely to assist with navigating and
+                    form-filling across the portal.</li>
+            </ul>
         </div>
     </div>
 
@@ -760,53 +715,24 @@
 
     {% if just_logged_in %}
     <script>
-        (function () {
-            var canvas = document.getElementById('confetti-canvas');
-            if (!canvas) return;
-            var ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            window.addEventListener('resize', function () {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
-            var COLORS = ['#ff9f1c', '#ff5500', '#2ec4b6', '#7209b7', '#3a86ff', '#ff006e', '#ffbe0b', '#06d6a0'];
-            var pieces = [];
-            for (var i = 0; i < 140; i++) {
-                pieces.push({
-                    x: Math.random() * window.innerWidth,
-                    y: Math.random() * window.innerHeight - window.innerHeight,
-                    w: Math.random() * 10 + 6, h: Math.random() * 6 + 4,
-                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                    vx: (Math.random() - .5) * 3, vy: Math.random() * 3 + 2,
-                    angle: Math.random() * 360, spin: (Math.random() - .5) * 8
-                });
-            }
-            var running = true;
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (var i = 0; i < pieces.length; i++) {
-                    var p = pieces[i];
-                    ctx.save(); ctx.fillStyle = p.color;
-                    ctx.translate(p.x, p.y); ctx.rotate(p.angle * Math.PI / 180);
-                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
-                    p.x += p.vx; p.y += p.vy; p.angle += p.spin;
-                    if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
-                }
-                if (running) requestAnimationFrame(draw);
-            }
-            draw();
-            setTimeout(function () { running = false; ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
-        })();
-
-        function closeWelcome() {
-            var ov = document.getElementById('welcome-overlay');
-            if (!ov) return;
-            ov.style.opacity = '0';
-            setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 420);
+        function closeWelcomeToast() {
+            var t = document.getElementById('welcome-toast');
+            if (t) t.classList.remove('show');
         }
-        var _ov = document.getElementById('welcome-overlay');
-        if (_ov) _ov.addEventListener('click', function (e) { if (e.target === _ov) closeWelcome(); });
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                var t = document.getElementById('welcome-toast');
+                if (t) t.classList.add('show');
+            }, 300);
+
+            // Auto dismiss after 5 seconds
+            setTimeout(function () {
+                var t = document.getElementById('welcome-toast');
+                if (t && t.classList.contains('show')) {
+                    t.classList.remove('show');
+                }
+            }, 5000);
+        });
     </script>
     {% endif %}
 

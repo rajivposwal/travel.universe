@@ -13,7 +13,8 @@
 
     <!-- Header -->
     <header>
-        <div class="logo" onclick="window.location='/'"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span></div>
+        <div class="logo" onclick="window.location='/'"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span>
+        </div>
         <div class="header-actions">
             <a href="/"><button class="btn btn-ghost"><i class="fas fa-arrow-left"></i> New Search</button></a>
             <a href="{{ url_for('logout') }}"><button class="btn btn-danger">Logout</button></a>
@@ -51,9 +52,26 @@
     {% set icons = {'Flight': 'fa-plane', 'Train': 'fa-train', 'Bus': 'fa-bus'} %}
     {% set icon_class = icons[travel_type] %}
 
+    <!-- ─── Filters ─── -->
+    <div
+        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Filter by
+                Name</label>
+            <input type="text" id="nameFilter" placeholder="e.g. Indigo, Air India..."
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+        </div>
+        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Max Price:
+                ₹<span id="priceVal">10000</span></label>
+            <input type="range" id="priceFilter" min="0" max="10000" step="100" value="10000"
+                style="width: 100%; margin-top: 10px; cursor: pointer;">
+        </div>
+    </div>
+
     <div class="ticket-list">
         {% for item in items %}
-        <div class="ticket-card">
+        <div class="ticket-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
 
             <!-- Carrier -->
             <div class="ticket-carrier">
@@ -84,10 +102,9 @@
                 {{ item.tag }}<strong>{{ item.class }}</strong>
             </div>
 
-            <!-- Price -->
             <div class="ticket-price">
                 <div class="price-amt"><sup>₹</sup>{{ item.price|int }}</div>
-                <a href="/book?type={{ travel_type }}&name={{ item.name }}&id={{ item.id }}&dep={{ item.departure }}&arr={{ item.arrival }}&price={{ item.price|int }}&src={{ source }}&dst={{ destination }}&cls={{ item.class }}"
+                <a href="/book?type={{ travel_type }}&name={{ item.name }}&id={{ item.id }}&dep={{ item.departure }}&arr={{ item.arrival }}&date={{ date }}&price={{ item.price|int }}&src={{ source }}&dst={{ destination }}&cls={{ item.class }}"
                     style="display:block;margin-top:14px;">
                     <button class="btn btn-primary" style="width:100%;">Select</button>
                 </a>
@@ -98,10 +115,26 @@
     </div>
 
     {% else %}
-    <!-- ─── Hotel Results ─────────────────────── -->
+    <!-- ─── Filters ─── -->
+    <div
+        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Filter by
+                Name</label>
+            <input type="text" id="nameFilter" placeholder="e.g. Taj, Radisson..."
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
+        </div>
+        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Max Price:
+                ₹<span id="priceVal">10000</span></label>
+            <input type="range" id="priceFilter" min="0" max="10000" step="100" value="10000"
+                style="width: 100%; margin-top: 10px; cursor: pointer;">
+        </div>
+    </div>
+
     <div class="hotel-grid-wrapper">
         {% for item in items %}
-        <div class="hotel-card">
+        <div class="hotel-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
             <img src="{{ item.img }}" alt="{{ item.name }}" loading="lazy">
             <div class="hotel-body">
                 <span class="hotel-badge">{% if item.rating >= 4.8 %}⭐ Top Rated{% else %}✔ Verified Stay{% endif
@@ -120,7 +153,7 @@
                     </div>
                     <div>
                         <div class="hotel-rating">★ {{ item.rating }}</div>
-                        <a href="/book?type=Hotel&name={{ item.name }}&id={{ item.id }}&price={{ item.price }}&dst={{ destination }}&cls={{ item.meta }}&rating={{ item.rating }}"
+                        <a href="/book?type=Hotel&name={{ item.name }}&id={{ item.id }}&date={{ date }}&price={{ item.price }}&dst={{ destination }}&cls={{ item.meta }}&rating={{ item.rating }}"
                             style="display:block;margin-top:10px;">
                             <button class="btn btn-primary">Book Stay</button>
                         </a>
@@ -174,6 +207,51 @@
     <footer>&copy; 2026 ASRS Travel</footer>
     <button id="theme-toggle"><i class="fas fa-moon"></i></button>
     <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameFilter = document.getElementById('nameFilter');
+            const priceFilter = document.getElementById('priceFilter');
+            const priceVal = document.getElementById('priceVal');
+            const cards = document.querySelectorAll('.ticket-card, .hotel-card');
+
+            if (cards.length > 0 && priceFilter && priceVal) {
+                let maxP = 0;
+                cards.forEach(c => {
+                    const p = parseInt(c.dataset.price || 0);
+                    if (p > maxP) maxP = p;
+                });
+                if (maxP > 0) {
+                    // Round up to nearest 500 for a cleaner slider
+                    maxP = Math.ceil(maxP / 500) * 500;
+                    priceFilter.max = maxP;
+                    priceFilter.value = maxP;
+                    priceVal.textContent = maxP.toLocaleString('en-IN');
+                }
+            }
+
+            const applyFilters = () => {
+                if (!nameFilter || !priceFilter) return;
+                const nm = nameFilter.value.toLowerCase().trim();
+                const max = parseInt(priceFilter.value);
+
+                if (priceVal) priceVal.textContent = max.toLocaleString('en-IN');
+
+                cards.forEach(card => {
+                    const cName = card.dataset.name || '';
+                    const cPrice = parseInt(card.dataset.price || 0);
+
+                    let visible = true;
+                    if (nm && !cName.includes(nm)) visible = false;
+                    if (cPrice > max) visible = false;
+
+                    card.style.display = visible ? '' : 'none';
+                });
+            };
+
+            if (nameFilter) nameFilter.addEventListener('input', applyFilters);
+            if (priceFilter) priceFilter.addEventListener('input', applyFilters);
+        });
+    </script>
 </body>
 
 </html>

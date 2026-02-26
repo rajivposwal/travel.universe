@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Card : {{ b.booking_ref }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Inter:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background: #e8eaf6;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .welcome-card-wrapper {
+            background: #0d0f1a;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            color: #fff;
+        }
+
+        .decorative-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(255, 159, 28, 0.1), transparent 400px),
+                radial-gradient(circle at bottom left, rgba(255, 159, 28, 0.05), transparent 300px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .card-header {
+            position: relative;
+            z-index: 1;
+            padding: 40px 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 159, 28, 0.2);
+        }
+
+        .brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: #ff9f1c;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .brand span {
+            color: #fff;
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            font-style: italic;
+        }
+
+        .card-body {
+            position: relative;
+            z-index: 1;
+            padding: 30px 40px;
+        }
+
+        .guest-greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #e8eaf6;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #ff9f1c;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+            font-weight: 800;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .terms-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            border-left: 3px solid #ff9f1c;
+        }
+
+        .terms-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .terms-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .terms-list li {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            line-height: 1.5;
+        }
+
+        .terms-list li i {
+            color: #ff9f1c;
+            font-size: 14px;
+            margin-right: 12px;
+            margin-top: 3px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            font-weight: 800;
+            text-decoration: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            border: none;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .btn-print {
+            background: #ff9f1c;
+            color: #1a1a2e;
+            box-shadow: 0 8px 24px rgba(255, 159, 28, 0.3);
+        }
+
+        .btn-back {
+            background: #fff;
+            color: #1a1a2e;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .welcome-card-wrapper {
+                max-width: 100%;
+                box-shadow: none;
+                border-radius: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border: 1px solid #1a1a2e;
+            }
+
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="welcome-card-wrapper">
+        <div class="decorative-bg"></div>
+
+        <div class="card-header">
+            <div class="brand">ASRS<span> Hotels</span></div>
+            <div class="welcome-title">Welcome, {{ b.traveler_names.split(',')[0] if b.traveler_names else user_name }}
+            </div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">PREMIUM GUEST ACCESS</div>
+        </div>
+
+        <div class="card-body">
+            <div class="details-grid">
+                <div class="detail-item" style="grid-column: span 2;">
+                    <div class="detail-label">Property Name</div>
+                    <div class="detail-value" style="font-size: 20px; color: #ff9f1c;">{{ b.item_name }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Booking Ref</div>
+                    <div class="detail-value">{{ b.booking_ref }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Room Type</div>
+                    <div class="detail-value">{{ b.seat_room or b.class_type or 'Standard Room' }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Check-in Date</div>
+                    <div class="detail-value">{{ b.travel_date or 'N/A' }}</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"
+                        style="color: {% if b.status == 'Confirmed' %}#06d6a0{% elif b.status == 'Cancelled' %}#ff4d6d{% else %}#ff9f1c{% endif %};">
+                        {{ b.status }}</div>
+                </div>
+            </div>
+
+            <div class="terms-section">
+                <div class="terms-title">Guest Guidelines &amp; Policies</div>
+                <ul class="terms-list">
+                    <li><i class="far fa-clock"></i> <strong>Standard Timings:</strong> Check-in is at 2:00 PM and
+                        Check-out is at 11:00 AM.</li>
+                    <li><i class="far fa-id-card"></i> <strong>Identification:</strong> Please present this Welcome Card
+                        (digital or physical) along with a valid government-issued photo ID upon arrival at the front
+                        desk.</li>
+                    <li><i class="fas fa-smoking-ban"></i> <strong>Non-Smoking Policy:</strong> Smoking is strictly
+                        prohibited in all rooms and indoor public areas.</li>
+                    <li><i class="fas fa-concierge-bell"></i> <strong>Special Requests:</strong> Any special requests,
+                        early check-in, or late check-out are subject to availability and may incur additional charges.
+                    </li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ b.booking_ref }}&color=000000&bgcolor=ffffff"
+                    alt="Booking QR" style="border-radius: 8px; border: 4px solid #fff;">
+                <div style="font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 8px; letter-spacing: 2px;">SCAN
+                    AT FRONT DESK</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> Download / Print
+            Card</button>
+        <a href="{{ url_for('manage_booking', booking_ref=b.booking_ref) }}" class="btn btn-back"><i
+                class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+</body>
+
+</html>

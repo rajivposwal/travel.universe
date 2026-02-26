@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cancel Booking &mdash; ASRS Travel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #0d0f1a;
+            color: #e8eaf6;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .c-card {
+            background: #13162a;
+            border: 1px solid rgba(231, 29, 54, .3);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .45);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .c-icon {
+            font-size: 64px;
+            color: #ff4d6d;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-weight: 900;
+        }
+
+        p {
+            color: rgba(232, 234, 246, .6);
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .breakdown {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255, 255, 255, .1);
+            font-weight: 800;
+            font-size: 16px;
+            color: #ff9f1c;
+        }
+
+        .row span.deduct {
+            color: #ff4d6d;
+        }
+
+        .btn-confirm {
+            background: #ff4d6d;
+            color: #fff;
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(231, 29, 54, .4);
+        }
+
+        .btn-back {
+            display: block;
+            margin-top: 16px;
+            color: rgba(232, 234, 246, .6);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: color .2s;
+        }
+
+        .btn-back:hover {
+            color: #fff;
+        }
+
+        [data-theme="light"] body {
+            background: #f0f2f8;
+            color: #1a1a2e;
+        }
+
+        [data-theme="light"] .c-card {
+            background: #fff;
+            border: 1px solid rgba(231, 29, 54, .3);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .1);
+        }
+
+        [data-theme="light"] p {
+            color: rgba(26, 26, 46, .7);
+        }
+
+        [data-theme="light"] .breakdown {
+            background: rgba(0, 0, 0, .04);
+        }
+
+        [data-theme="light"] .row:last-child {
+            border-top-color: rgba(0, 0, 0, .1);
+        }
+
+        [data-theme="light"] .btn-back {
+            color: rgba(26, 26, 46, .7);
+        }
+
+        [data-theme="light"] .btn-back:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body data-theme="{{ session.get('theme', 'dark') }}">
+    <script>
+        (function () {
+            var saved = localStorage.getItem('kyt-theme') || 'dark';
+            document.body.setAttribute('data-theme', saved);
+        })();
+    </script>
+    <div class="c-card">
+        <i class="fas fa-exclamation-triangle c-icon"></i>
+        <h2>Cancel Booking</h2>
+        <p>Are you sure you want to cancel booking <strong>{{ b.booking_ref }}</strong>? A 20% cancellation fee will be
+            deducted from your total amount paid.</p>
+
+        <div class="breakdown">
+            <div class="row">
+                <span>Total Amount Paid</span>
+                <span>&#8377;{{ "{:,}".format(b.price) }}</span>
+            </div>
+            <div class="row">
+                <span>Cancellation Fee (20%)</span>
+                <span class="deduct">- &#8377;{{ "{:,}".format(deduction) }}</span>
+            </div>
+            <div class="row">
+                <span>Refund Amount</span>
+                <span>&#8377;{{ "{:,}".format(refund) }}</span>
+            </div>
+        </div>
+
+        <form method="POST">
+            <button type="submit" class="btn-confirm">Confirm Cancellation</button>
+        </form>
+        <a href="{{ url_for('manage_booking', booking_ref=b.booking_ref) }}" class="btn-back">Never mind, go back</a>
+    </div>
+</body>
+
+</html>
