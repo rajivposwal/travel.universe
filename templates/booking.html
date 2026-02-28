@@ -83,6 +83,59 @@
             <h2 class="step-title"><i class="fas fa-plane"></i> Select Your Seat</h2>
             <p class="step-sub">{{ src }} → {{ dst }} &nbsp;|&nbsp; {{ cls }}</p>
 
+            {% if true_schedule %}
+            <div
+                style="background:var(--card-bg); border: 1px solid var(--accent); padding:20px 24px; border-radius:18px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(255, 159, 28, 0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div
+                        style="font-size:12px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px;">
+                        <i class="fas fa-satellite-dish" style="margin-right:6px; animation: pulse 2s infinite;"></i>
+                        True Schedule Radar
+                    </div>
+                    <span
+                        style="font-size:10px; background:rgba(0,255,0,0.1); color:#00cf00; padding:3px 8px; border-radius:10px; font-weight:700;">Live
+                        FlightRadar24 Verification</span>
+                </div>
+
+                <h3 style="font-size:18px; font-weight:900; margin-bottom:16px;">Flight {{ true_schedule.flight }} <span
+                        style="font-size:14px; color:var(--muted); font-weight:600;">(Aircraft: {{
+                        true_schedule.aircraft }})</span></h3>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">
+                            Departure Time</div>
+                        <div style="font-size:16px; font-weight:800; color:var(--text);">{{ true_schedule.departure_time
+                            }}</div>
+                        <div style="font-size:12px; font-weight:600; color:var(--muted); margin-top:2px;"><i
+                                class="fas fa-map-marker-alt" style="color:var(--accent2); margin-right:4px;"></i>
+                            Terminal {{ true_schedule.departure_terminal }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">
+                            Arrival Time</div>
+                        <div style="font-size:16px; font-weight:800; color:var(--text);">{{ true_schedule.arrival_time
+                            }}</div>
+                        <div style="font-size:12px; font-weight:600; color:var(--muted); margin-top:2px;"><i
+                                class="fas fa-flag-checkered" style="color:var(--accent2); margin-right:4px;"></i>
+                            Terminal {{ true_schedule.arrival_terminal }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">
+                            Schedule Status</div>
+                        <div style="font-size:16px; font-weight:800; color:#22c55e;"><i class="fas fa-check-circle"
+                                style="margin-right:6px;"></i> {{ true_schedule.status }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Base
+                            Ticket Price</div>
+                        <div style="font-size:22px; font-weight:900; color:var(--accent);">₹{{ true_schedule.price }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="seat-legend">
                 <div class="legend-item">
                     <div class="seat available"></div> Available
@@ -255,6 +308,66 @@
                 </div>
                 {% endfor %}
             </div>
+
+            <div id="hotel-addons" style="display:none; margin-top:30px;">
+                <h3 style="margin-bottom:16px;font-size:16px;color:#ff9f1c;"><i class="fas fa-concierge-bell"></i> Extra
+                    Hotel Services</h3>
+
+                <div style="margin-bottom: 20px; background: rgba(255,159,28,0.1); padding: 15px; border-radius: 10px;">
+                    <p style="margin-bottom: 10px; font-size: 14px; font-weight: bold;">Would you like to avail extra
+                        premium services during your stay?</p>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:14px;">
+                            <input type="radio" name="want_extras" value="yes" onchange="toggleExtras(true)"> Yes, show
+                            me options
+                        </label>
+                        <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:14px;">
+                            <input type="radio" name="want_extras" value="no" checked onchange="toggleExtras(false)">
+                            No, thanks
+                        </label>
+                    </div>
+                </div>
+
+                <div class="addons-grid" id="addons-grid-container"
+                    style="display:none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+                    <label class="addon-card"
+                        style="display:flex; align-items:center; gap:12px; padding:15px; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
+                        <input type="checkbox" class="hotel-addon" value="Gym" data-price="500"
+                            onchange="updateAddons()">
+                        <div>
+                            <div style="font-weight:bold; font-size:14px;">Gym Access</div>
+                            <div style="font-size:12px; color:#ff9f1c;">+₹500</div>
+                        </div>
+                    </label>
+                    <label class="addon-card"
+                        style="display:flex; align-items:center; gap:12px; padding:15px; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
+                        <input type="checkbox" class="hotel-addon" value="Laundry" data-price="700"
+                            onchange="updateAddons()">
+                        <div>
+                            <div style="font-weight:bold; font-size:14px;">Laundry Service</div>
+                            <div style="font-size:12px; color:#ff9f1c;">+₹700</div>
+                        </div>
+                    </label>
+                    <label class="addon-card"
+                        style="display:flex; align-items:center; gap:12px; padding:15px; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
+                        <input type="checkbox" class="hotel-addon" value="Spa" data-price="1000"
+                            onchange="updateAddons()">
+                        <div>
+                            <div style="font-weight:bold; font-size:14px;">Spa & Wellness</div>
+                            <div style="font-size:12px; color:#ff9f1c;">+₹1,000</div>
+                        </div>
+                    </label>
+                    <label class="addon-card"
+                        style="display:flex; align-items:center; gap:12px; padding:15px; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; cursor:pointer;">
+                        <input type="checkbox" class="hotel-addon" value="Massage" data-price="1500"
+                            onchange="updateAddons()">
+                        <div>
+                            <div style="font-weight:bold; font-size:14px;">Full Body Massage</div>
+                            <div style="font-size:12px; color:#ff9f1c;">+₹1,500</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
             {% endif %}
 
             <!-- Selection Status Bar -->
@@ -313,6 +426,7 @@
                     <span class="review-label">{% if type == 'Hotel' %}Room{% else %}Seat{% endif %}</span>
                     <span class="review-value" id="review-seat-val">—</span>
                 </div>
+                <div id="review-addons-container"></div>
 
                 <div class="review-divider"></div>
 
@@ -511,6 +625,8 @@
     <script>
         /* ─── State ─────────────────────────── */
         let selectedSeats = [];
+        let selectedAddons = [];
+        let addonsSum = 0;
         let basePriceSum = 0;
         let discountAmt = 0;
         let selectedPrice = parseInt("{{ price }}") || 0;
@@ -537,23 +653,58 @@
                 document.querySelectorAll('.seat.selected, .berth-box.selected').forEach(x => {
                     basePriceSum += parseInt(x.dataset.price || 0);
                 });
+                basePriceSum += addonsSum;
                 applyCoupon();
                 updateSelectionBar();
             });
         });
 
-        /* ─── Room Selection ─────────────────── */
-        window.selectRoom = (card) => {
-            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('room-picked'));
-            card.classList.add('room-picked');
-            selectedSeats = [card.dataset.room];
-            basePriceSum = parseInt(card.dataset.price || 0);
+        /* ─── Room & Addons Selection ─────────────────── */
+        window.toggleExtras = (show) => {
+            const grid = document.getElementById('addons-grid-container');
+            if (show) {
+                grid.style.display = 'grid';
+            } else {
+                grid.style.display = 'none';
+                document.querySelectorAll('.hotel-addon').forEach(cb => cb.checked = false);
+                updateAddons();
+            }
+        };
+
+        window.updateAddons = () => {
+            addonsSum = 0;
+            selectedAddons = [];
+            document.querySelectorAll('.hotel-addon:checked').forEach(cb => {
+                addonsSum += parseInt(cb.dataset.price);
+                selectedAddons.push(cb.value);
+            });
+            basePriceSum = 0;
+            document.querySelectorAll('.seat.selected, .berth-box.selected, .room-picked').forEach(x => {
+                basePriceSum += parseInt(x.dataset.price || 0);
+            });
+            basePriceSum += addonsSum;
             applyCoupon();
             updateSelectionBar();
         };
 
+        window.selectRoom = (card) => {
+            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('room-picked'));
+            card.classList.add('room-picked');
+            selectedSeats = [card.dataset.room];
+            const addonsDiv = document.getElementById('hotel-addons');
+            if (addonsDiv) {
+                addonsDiv.style.display = 'block';
+                setTimeout(() => {
+                    addonsDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+            updateAddons();
+        };
+
         function updateSelectionBar() {
-            document.getElementById('sel-label').textContent = '{{ type == "Hotel" and "Room" or "Seats" }}: ' + (selectedSeats.join(', ') || 'None');
+            let labelText = '{{ type == "Hotel" and "Room" or "Seats" }}: ' + (selectedSeats.join(', ') || 'None');
+            if (selectedAddons.length > 0) labelText += ' (+ ' + selectedAddons.join(', ') + ')';
+            document.getElementById('sel-label').textContent = labelText;
             document.getElementById('sel-detail').textContent = selectedSeats.length ? 'Tap "Continue" to proceed' : 'Please select at least one.';
             document.getElementById('sel-price').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
 
@@ -611,9 +762,23 @@
             if (n === 3) {
                 // Ensure all traveler names are filled
                 let allFilled = true;
-                const reqInputs = document.querySelectorAll('.trav-name, .trav-age, .trav-phone, .trav-email');
+                const reqInputs = document.querySelectorAll('.trav-name, .trav-age, .trav-phone, .trav-email, .trav-id');
                 reqInputs.forEach(inp => { if (!inp.value.trim() && inp.hasAttribute('required')) allFilled = false; });
-                if (!allFilled) { alert('Please fill missing traveler details (Name, Age, Phone, Email).'); return; }
+                if (!allFilled) { alert('Please fill missing passenger details (Name, Age, Phone, Email, Govt ID).'); return; }
+
+                let invalidAge = false;
+                document.querySelectorAll('.trav-age').forEach(inp => {
+                    const val = inp.value.trim();
+                    if (val && (val.length > 2 || parseInt(val) < 1 || parseInt(val) > 99)) invalidAge = true;
+                });
+                if (invalidAge) { alert('Please enter a valid age (max 2 digits).'); return; }
+
+                let invalidPhone = false;
+                document.querySelectorAll('.trav-phone').forEach(inp => {
+                    const val = inp.value.trim();
+                    if (val && !/^\+\d{1,3}\s\d{10}$/.test(val)) invalidPhone = true;
+                });
+                if (invalidPhone) { alert('Please enter phone in format: +[country code] [10 digits]\nExample: +91 9876543210'); return; }
             }
 
             for (let i = 1; i <= 4; i++) {
@@ -623,57 +788,81 @@
             }
             if (n === 2) {
                 document.getElementById('review-seat-row').style.display = '';
-                document.getElementById('review-seat-val').textContent = selectedSeats.join(', ');
+                let reviewVal = selectedSeats.join(', ');
+                document.getElementById('review-seat-val').textContent = reviewVal;
+
+                const rAddons = document.getElementById('review-addons-container');
+                if (rAddons) {
+                    rAddons.innerHTML = '';
+                    if (selectedAddons.length > 0) {
+                        document.querySelectorAll('.hotel-addon:checked').forEach(cb => {
+                            rAddons.innerHTML += `
+                                <div class="review-row" style="color:#ff9f1c;">
+                                    <span class="review-label"><i class="fas fa-plus"></i> Extra: ${cb.value}</span>
+                                    <span class="review-value">+₹${parseInt(cb.dataset.price).toLocaleString('en-IN')}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+
                 applyCoupon();
 
                 const tList = document.getElementById('travelers-list');
                 const tSect = document.getElementById('travelers-section');
                 if (tList) tList.innerHTML = '';
 
-                if (!isHotel) {
-                    selectedSeats.forEach((seat, idx) => {
-                        const initVal = (idx === 0) ? '{{ session_user }}' : '';
-                        tList.innerHTML += `
-                            <div style="margin-bottom:20px; background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; border:1px solid rgba(255,159,28,0.2);">
-                                <label style="font-size:13px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; display:block;">Traveler ${idx + 1} (Seat ${seat})</label>
-                                
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
-                                    <div>
-                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Full Name *</label>
-                                        <input type="text" class="trav-name" placeholder="Enter full name" value="${initVal}" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
-                                    </div>
-                                    <div>
-                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Age *</label>
-                                        <input type="number" class="trav-age" placeholder="e.g. 28" min="1" max="100" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
-                                    </div>
-                                </div>
-                                
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
-                                    <div>
-                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Gender</label>
-                                        <select class="trav-gender" style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;appearance:auto;cursor:pointer;">
-                                            <option value="Male" style="color:#000">Male</option>
-                                            <option value="Female" style="color:#000">Female</option>
-                                            <option value="Other" style="color:#000">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Phone Number *</label>
-                                        <input type="tel" class="trav-phone" placeholder="e.g. +91 9876543210" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
-                                    </div>
-                                </div>
+                selectedSeats.forEach((seat, idx) => {
+                    const initVal = (idx === 0) ? '{{ session_user }}' : '';
+                    const labelType = isHotel ? 'Guest' : 'Traveler';
+                    const seatLabel = isHotel ? 'Room' : 'Seat';
+                    const idField = (isHotel || '{{ type }}' === 'Flight') ? `
+                        <div style="margin-top:14px;">
+                            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Aadhar / Govt ID Number *</label>
+                            <input type="text" class="trav-id" placeholder="Enter ID Proof Number" required style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;">
+                        </div>
+                    ` : '';
 
+                    tList.innerHTML += `
+                        <div style="margin-bottom:20px; background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid var(--border);">
+                            <label style="font-size:13px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; display:block;">${labelType} ${idx + 1} (${seatLabel} ${seat})</label>
+                            
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
                                 <div>
-                                    <label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:6px;">Email Address *</label>
-                                    <input type="email" class="trav-email" placeholder="example@gmail.com" required style="width:100%;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,159,28,0.2);color:#fff;font-family:inherit;">
+                                    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Full Name *</label>
+                                    <input type="text" class="trav-name" placeholder="Enter full name" value="${initVal}" required style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Age * (Max 99)</label>
+                                    <input type="number" class="trav-age" placeholder="e.g. 28" min="1" max="99" oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" required style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;">
                                 </div>
                             </div>
-                        `;
-                    });
-                    tSect.style.display = 'block';
-                } else {
-                    tSect.style.display = 'none';
-                }
+                            
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
+                                <div>
+                                    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Gender</label>
+                                    <select class="trav-gender" style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;appearance:auto;cursor:pointer;">
+                                        <option value="Male" style="color:#000">Male</option>
+                                        <option value="Female" style="color:#000">Female</option>
+                                        <option value="Other" style="color:#000">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Phone Number * (+Code Number)</label>
+                                    <input type="tel" class="trav-phone" placeholder="e.g. +91 9876543210" pattern="^\+\d{1,3}\s\d{10}$" title="Format: +[code] [10 digits] (e.g. +91 9876543210)" required style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Email Address *</label>
+                                <input type="email" class="trav-email" placeholder="example@gmail.com" required style="width:100%;padding:12px 14px;border-radius:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);font-family:inherit;">
+                            </div>
+                            
+                            ${idField}
+                        </div>
+                    `;
+                });
+                tSect.style.display = 'block';
             }
             if (n === 3) {
                 document.getElementById('pay-amount-display').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
@@ -686,6 +875,7 @@
                     const genders = document.querySelectorAll('.trav-gender');
                     const phones = document.querySelectorAll('.trav-phone');
                     const emails = document.querySelectorAll('.trav-email');
+                    const ids = document.querySelectorAll('.trav-id');
 
                     tNodes.forEach((inp, i) => {
                         let nm = inp.value.trim();
@@ -693,11 +883,13 @@
                         let g = genders[i] ? genders[i].value : '';
                         let p = phones[i] ? phones[i].value.trim() : '';
                         let e = emails[i] ? emails[i].value.trim() : '';
+                        let iProof = ids[i] ? ids[i].value.trim() : '';
 
                         let extras = [];
                         if (a || g) extras.push(`${a ? a + 'y ' : ''}${g}`);
                         if (p) extras.push(`Ph: ${p}`);
                         if (e) extras.push(e);
+                        if (iProof) extras.push(`Aadhar/ID: ${iProof}`);
 
                         let fullLine = nm;
                         if (extras.length > 0) {
@@ -718,7 +910,7 @@
                             from_city: '{{ src }}',
                             to_city: '{{ dst }}',
                             travel_date: '{{ type }}' === 'Hotel' ? '{{ date }}' : '{{ date }} | {{ dep }} - {{ arr }}',
-                            seat_room: selectedSeats.join(', '),
+                            seat_room: selectedSeats.join(', ') + (selectedAddons.length ? ' + ' + selectedAddons.join(', ') : ''),
                             passengers: isHotel ? 1 : selectedSeats.length,
                             traveler_names: tNames.join(', '),
                             class_type: '{{ cls }}',
@@ -769,7 +961,7 @@
 
                 // Show confirmation details
                 document.getElementById('confirm-id').textContent = bookId;
-                document.getElementById('confirm-seat').textContent = selectedSeats.join(', ') || '—';
+                document.getElementById('confirm-seat').textContent = (selectedSeats.join(', ') || '—') + (selectedAddons.length ? ' + ' + selectedAddons.join(', ') : '');
                 document.getElementById('confirm-amount').textContent = '₹' + selectedPrice.toLocaleString('en-IN');
                 document.getElementById('confirm-payment').textContent = {
                     upi: 'UPI / Online', card: 'Card Payment', cash: 'Cash at Counter'
@@ -781,13 +973,42 @@
                     document.getElementById('confirm-traveller').innerHTML = tNames.join('<br>');
                 }
 
+                let amadeusTravelers = [];
+                const ages = document.querySelectorAll('.trav-age');
+                const genders = document.querySelectorAll('.trav-gender');
+                const phones = document.querySelectorAll('.trav-phone');
+                const emails = document.querySelectorAll('.trav-email');
+                const ids = document.querySelectorAll('.trav-id');
+                document.querySelectorAll('.trav-name').forEach((inp, i) => {
+                    amadeusTravelers.push({
+                        name: inp.value.trim(),
+                        age: ages[i] ? ages[i].value.trim() : '25',
+                        gender: genders[i] ? genders[i].value : 'Male',
+                        phone: phones[i] ? phones[i].value.trim() : '',
+                        email: emails[i] ? emails[i].value.trim() : '',
+                        idProof: ids[i] ? ids[i].value.trim() : ''
+                    });
+                });
+
                 goToStep(4);
 
                 if (pendingBookId) {
                     fetch('/api/book/update-status', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ booking_ref: pendingBookId, status: 'Confirmed' })
+                        body: JSON.stringify({
+                            booking_ref: pendingBookId,
+                            status: 'Confirmed',
+                            item_id: '{{ item_id }}',
+                            service_type: '{{ type }}',
+                            travelers: amadeusTravelers
+                        })
+                    }).then(r => r.json()).then(dt => {
+                        if (dt.success && dt.booking_ref && dt.booking_ref !== pendingBookId) {
+                            document.getElementById('confirm-id').textContent = dt.booking_ref;
+                            const tBtn = document.querySelector('a[href*="/ticket"]');
+                            if (tBtn) tBtn.href = "/booking/" + dt.booking_ref + "/ticket";
+                        }
                     }).catch(() => { });
                 } else {
                     if (tNames.length === 0) tNames = ['{{ session_user }}'];

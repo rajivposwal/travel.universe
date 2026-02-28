@@ -7,6 +7,11 @@
     <title>Search Results — ASRS Travel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Map CSS/JS hooks -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
 <body data-theme="light">
@@ -27,6 +32,11 @@
             <h1>
                 <span>{{ items|length }}</span>
                 {{ travel_type }}s Found
+                {% if flight_scope %}
+                <span
+                    style="font-size:12px; font-weight:800; background:var(--accent); color:#fff; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:12px; text-transform:uppercase; letter-spacing:1px; display:inline-block;">{{
+                    flight_scope }}</span>
+                {% endif %}
             </h1>
             <p style="color:var(--muted);font-weight:600;margin-top:6px;">
                 {{ source }} → {{ destination }} | {{ date }}
@@ -46,123 +56,244 @@
         {% endif %}
     </div>
 
+    <!-- ─── Interactive Route Map ─── -->
+    {% if s_coords and d_coords and travel_type != 'Hotel' %}
+    <div style="padding: 0 4%; max-width: 1400px; margin: 0 auto 30px auto;">
+        <div id="route-map"
+            style="height: 380px; width: 100%; border-radius: 16px; overflow: hidden; z-index: 1; border: 1px solid var(--border); box-shadow: 0 10px 30px var(--shadow);">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sLat = parseFloat('{{ s_coords[0]|default(0) }}');
+            var sLon = parseFloat('{{ s_coords[1]|default(0) }}');
+            var dLat = parseFloat('{{ d_coords[0]|default(0) }}');
+            var dLon = parseFloat('{{ d_coords[1]|default(0) }}');
+
+            // Initialize Map
+            var map = L.map('route-map').fitBounds([
+                [sLat, sLon],
+                [dLat, dLon]
+            ], { padding: [60, 60] });
+
+            // Premium Custom Basemap
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(map);
+
+            // Determine vehicle icon dynamically based on user's travel search
+            var iconType = 'plane';
+            var tType = '{{ travel_type }}';
+            if (tType === 'Train') { iconType = 'train'; }
+            if (tType === 'Bus') { iconType = 'bus'; }
+
+            var markerHtml = `<div style="background: var(--accent); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(255,159,28,0.4);"><i class="fas fa-${iconType}" style="font-size: 16px;"></i></div>`;
+
+            var customIcon = L.divIcon({
+                html: markerHtml,
+                className: '',
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+                popupAnchor: [0, -15]
+            });
+
+            // Bind Points
+            L.marker([sLat, sLon], { icon: customIcon }).addTo(map)
+                .bindPopup('<b style="color:var(--text);font-family:\'Outfit\';font-size:14px;">Origin:</b> <span style="font-size:13px;">{{ source }}</span>');
+
+            L.marker([dLat, dLon], { icon: customIcon }).addTo(map)
+                .bindPopup('<b style="color:var(--text);font-family:\'Outfit\';font-size:14px;">Destination:</b> <span style="font-size:13px;">{{ destination }}</span>');
+
+            // Draw Trajectory
+            var latlngs = [[sLat, sLon], [dLat, dLon]];
+            var curveLine = L.polyline(latlngs, {
+                color: '#ff9f1c',
+                weight: 4,
+                dashArray: '10, 15',
+                lineCap: 'round'
+            }).addTo(map);
+
+            // Optional: Fit bounds just to be safe if tile loads warp it
+            map.fitBounds(curveLine.getBounds(), { padding: [60, 60] });
+        });
+    </script>
+    {% endif %}
+
     <!-- ─── Transport Results (Flight / Train / Bus) ─── -->
     {% if travel_type != 'Hotel' %}
 
     {% set icons = {'Flight': 'fa-plane', 'Train': 'fa-train', 'Bus': 'fa-bus'} %}
     {% set icon_class = icons[travel_type] %}
 
-    <!-- ─── Filters ─── -->
-    <div
-        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
-        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Filter by
-                Name</label>
-            <input type="text" id="nameFilter" placeholder="e.g. Indigo, Air India..."
-                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
-        </div>
-        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Max Price:
-                ₹<span id="priceVal">10000</span></label>
-            <input type="range" id="priceFilter" min="0" max="10000" step="100" value="10000"
-                style="width: 100%; margin-top: 10px; cursor: pointer;">
-        </div>
-    </div>
+    <!-- ─── Layout Wrapper ─── -->
+    <div class="results-layout"
+        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+        <!-- Sidebar Filters -->
+        <aside
+            style="flex: 1 1 250px; max-width: 300px; position: sticky; top: 100px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 8px 30px var(--shadow);">
+            <h3 style="font-weight: 900; margin-bottom: 20px; font-size: 18px; color: var(--text);"><i
+                    class="fas fa-filter"></i> Filters</h3>
 
-    <div class="ticket-list">
-        {% for item in items %}
-        <div class="ticket-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
-
-            <!-- Carrier -->
-            <div class="ticket-carrier">
-                <div class="carrier-label">{{ travel_type }} Provider</div>
-                <div class="carrier-name">{{ item.name }}</div>
-                <div class="carrier-id">{{ item.id }}</div>
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: block;">
+                    Modify Date
+                </label>
+                <form action="{{ url_for('search') }}" method="POST" style="display: flex; gap: 8px;">
+                    <input type="hidden" name="travel_type" value="{{ travel_type }}">
+                    <input type="hidden" name="source" value="{{ source }}">
+                    <input type="hidden" name="destination" value="{{ destination }}">
+                    <input type="date" name="date" value="{{ date }}" onchange="this.form.submit()"
+                        style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: 'Outfit'; cursor: pointer;">
+                </form>
             </div>
 
-            <!-- Route -->
-            <div class="ticket-route">
-                <div class="city-time">
-                    <h3>{{ item.departure }}</h3>
-                    <span>{{ source }}</span>
-                </div>
-                <div class="route-line">
-                    <hr>
-                    <i class="fas {{ icon_class }} route-icon"></i>
-                    <span>{{ item.duration }}</span>
-                </div>
-                <div class="city-time">
-                    <h3>{{ item.arrival }}</h3>
-                    <span>{{ destination }}</span>
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: block;">
+                    Preferred {{ travel_type }}s
+                </label>
+                <div id="provider-checkboxes"
+                    style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
+                    <!-- JS Checkboxes injected here -->
                 </div>
             </div>
 
-            <!-- Class Info -->
-            <div class="ticket-class">
-                {{ item.tag }}<strong>{{ item.class }}</strong>
+            <div style="margin-bottom: 0;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 10px;">
+                    Max Price: ₹<span id="priceVal">10000</span>
+                </label>
+                <input type="range" id="priceFilter" min="0" max="100000" step="500" value="100000"
+                    style="width: 100%; cursor: pointer;">
             </div>
+        </aside>
 
-            <div class="ticket-price">
-                <div class="price-amt"><sup>₹</sup>{{ item.price|int }}</div>
-                <a href="/book?type={{ travel_type }}&name={{ item.name }}&id={{ item.id }}&dep={{ item.departure }}&arr={{ item.arrival }}&date={{ date }}&price={{ item.price|int }}&src={{ source }}&dst={{ destination }}&cls={{ item.class }}"
-                    style="display:block;margin-top:14px;">
-                    <button class="btn btn-primary" style="width:100%;">Select</button>
-                </a>
+        <!-- Ticket List Container -->
+        <div class="ticket-list" style="flex: 3 1 600px; margin: 0; padding: 0;">
+            {% for item in items %}
+            <div class="ticket-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
+
+                <!-- Carrier -->
+                <div class="ticket-carrier">
+                    <div class="carrier-label">{{ travel_type }} Provider</div>
+                    <div class="carrier-name">{{ item.name }}</div>
+                    <div class="carrier-id">{{ item.id }}</div>
+                </div>
+
+                <!-- Route -->
+                <div class="ticket-route">
+                    <div class="city-time">
+                        <h3>{{ item.departure }}</h3>
+                        <span>{{ source }}</span>
+                    </div>
+                    <div class="route-line">
+                        <hr>
+                        <i class="fas {{ icon_class }} route-icon"></i>
+                        <span>{{ item.duration }}</span>
+                    </div>
+                    <div class="city-time">
+                        <h3>{{ item.arrival }}</h3>
+                        <span>{{ destination }}</span>
+                    </div>
+                </div>
+
+                <!-- Class Info -->
+                <div class="ticket-class">
+                    {{ item.tag }}<strong>{{ item.class }}</strong>
+                </div>
+
+                <div class="ticket-price">
+                    <div class="price-amt"><sup>₹</sup>{{ item.price|int }}</div>
+                    <a href="/book?type={{ travel_type }}&name={{ item.name }}&id={{ item.id }}&dep={{ item.departure }}&arr={{ item.arrival }}&date={{ date }}&price={{ item.price|int }}&src={{ source }}&dst={{ destination }}&cls={{ item.class }}"
+                        style="display:block;margin-top:14px;">
+                        <button class="btn btn-primary" style="width:100%;">Select</button>
+                    </a>
+                </div>
+
             </div>
-
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    </div> <!-- Close Layout Wrapper -->
 
     {% else %}
-    <!-- ─── Filters ─── -->
-    <div
-        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
-        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Filter by
-                Name</label>
-            <input type="text" id="nameFilter" placeholder="e.g. Taj, Radisson..."
-                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);">
-        </div>
-        <div class="field" style="margin: 0; flex: 1; min-width: 200px;">
-            <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">Max Price:
-                ₹<span id="priceVal">10000</span></label>
-            <input type="range" id="priceFilter" min="0" max="10000" step="100" value="10000"
-                style="width: 100%; margin-top: 10px; cursor: pointer;">
-        </div>
-    </div>
+    <!-- ─── Layout Wrapper (Hotels) ─── -->
+    <div class="results-layout"
+        style="padding: 0 4%; max-width: 1400px; margin: 20px auto; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+        <!-- Sidebar Filters -->
+        <aside
+            style="flex: 1 1 250px; max-width: 300px; position: sticky; top: 100px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 8px 30px var(--shadow);">
+            <h3 style="font-weight: 900; margin-bottom: 20px; font-size: 18px; color: var(--text);"><i
+                    class="fas fa-filter"></i> Filters</h3>
 
-    <div class="hotel-grid-wrapper">
-        {% for item in items %}
-        <div class="hotel-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
-            <img src="{{ item.img }}" alt="{{ item.name }}" loading="lazy">
-            <div class="hotel-body">
-                <span class="hotel-badge">{% if item.rating >= 4.8 %}⭐ Top Rated{% else %}✔ Verified Stay{% endif
-                    %}</span>
-                <div class="hotel-name">{{ item.name }}</div>
-                <div class="hotel-room">{{ item.meta }}</div>
-                <div class="hotel-amenities">
-                    {% for a in item.amenities %}
-                    <span class="amenity-tag">{{ a }}</span>
-                    {% endfor %}
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: block;">
+                    Modify Date
+                </label>
+                <form action="{{ url_for('search') }}" method="POST" style="display: flex; gap: 8px;">
+                    <input type="hidden" name="travel_type" value="{{ travel_type }}">
+                    <input type="hidden" name="source" value="{{ source }}">
+                    <input type="hidden" name="destination" value="{{ destination }}">
+                    <input type="date" name="date" value="{{ date }}" onchange="this.form.submit()"
+                        style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: 'Outfit'; cursor: pointer;">
+                </form>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: block;">
+                    Hotel Chains & Names
+                </label>
+                <div id="provider-checkboxes"
+                    style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
+                    <!-- JS Checkboxes injected here -->
                 </div>
-                <div class="hotel-footer">
-                    <div>
-                        <div class="hotel-price">₹{{ item.price }}</div>
-                        <div class="per-night">per night</div>
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label
+                    style="font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 10px;">
+                    Max Price: ₹<span id="priceVal">10000</span>
+                </label>
+                <input type="range" id="priceFilter" min="0" max="100000" step="500" value="10000"
+                    style="width: 100%; cursor: pointer;">
+            </div>
+        </aside>
+
+        <div class="hotel-grid-wrapper" style="flex: 3 1 600px;">
+            {% for item in items %}
+            <div class="hotel-card" data-price="{{ item.price|int }}" data-name="{{ item.name|lower }}">
+                <img src="{{ item.img }}" alt="{{ item.name }}" loading="lazy">
+                <div class="hotel-body">
+                    <span class="hotel-badge">{% if item.rating >= 4.8 %}⭐ Top Rated{% else %}✔ Verified Stay{% endif
+                        %}</span>
+                    <div class="hotel-name">{{ item.name }}</div>
+                    <div class="hotel-room">{{ item.meta }}</div>
+                    <div class="hotel-amenities">
+                        {% for a in item.amenities %}
+                        <span class="amenity-tag">{{ a }}</span>
+                        {% endfor %}
                     </div>
-                    <div>
-                        <div class="hotel-rating">★ {{ item.rating }}</div>
-                        <a href="/book?type=Hotel&name={{ item.name }}&id={{ item.id }}&date={{ date }}&price={{ item.price }}&dst={{ destination }}&cls={{ item.meta }}&rating={{ item.rating }}"
-                            style="display:block;margin-top:10px;">
-                            <button class="btn btn-primary">Book Stay</button>
-                        </a>
+                    <div class="hotel-footer">
+                        <div>
+                            <div class="hotel-price">₹{{ item.price }}</div>
+                            <div class="per-night">per night</div>
+                        </div>
+                        <div>
+                            <div class="hotel-rating">★ {{ item.rating }}</div>
+                            <a href="/book?type=Hotel&name={{ item.name }}&id={{ item.id }}&date={{ date }}&price={{ item.price }}&dst={{ destination }}&cls={{ item.meta }}&rating={{ item.rating }}"
+                                style="display:block;margin-top:10px;">
+                                <button class="btn btn-primary">Book Stay</button>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    </div> <!-- Close Wrapper -->
     {% endif %}
 
     <!-- ─── Destination Info ─────────────────── -->
@@ -209,46 +340,104 @@
     <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const nameFilter = document.getElementById('nameFilter');
             const priceFilter = document.getElementById('priceFilter');
             const priceVal = document.getElementById('priceVal');
-            const cards = document.querySelectorAll('.ticket-card, .hotel-card');
+            const providerContainer = document.getElementById('provider-checkboxes');
+            const cards = Array.from(document.querySelectorAll('.ticket-card, .hotel-card'));
 
-            if (cards.length > 0 && priceFilter && priceVal) {
-                let maxP = 0;
-                cards.forEach(c => {
-                    const p = parseInt(c.dataset.price || 0);
-                    if (p > maxP) maxP = p;
-                });
-                if (maxP > 0) {
-                    // Round up to nearest 500 for a cleaner slider
-                    maxP = Math.ceil(maxP / 500) * 500;
-                    priceFilter.max = maxP;
-                    priceFilter.value = maxP;
-                    priceVal.textContent = maxP.toLocaleString('en-IN');
-                }
-            }
-
+            // Core filtering logic
             const applyFilters = () => {
-                if (!nameFilter || !priceFilter) return;
-                const nm = nameFilter.value.toLowerCase().trim();
+                if (!priceFilter) return;
                 const max = parseInt(priceFilter.value);
-
                 if (priceVal) priceVal.textContent = max.toLocaleString('en-IN');
+
+                // Snatch all actively checked unique provider boxes
+                const checkedBoxes = Array.from(document.querySelectorAll('.provider-chk:checked')).map(cb => cb.value.toLowerCase());
+                const isProviderFiltering = checkedBoxes.length > 0;
 
                 cards.forEach(card => {
                     const cName = card.dataset.name || '';
                     const cPrice = parseInt(card.dataset.price || 0);
 
                     let visible = true;
-                    if (nm && !cName.includes(nm)) visible = false;
                     if (cPrice > max) visible = false;
+
+                    // Enforce Checkbox filtering strictly
+                    if (isProviderFiltering) {
+                        // Check if the card's native name matches EXACTLY or partially any of our checked filter names
+                        let exactMatch = checkedBoxes.find(b => cName === b || cName.includes(b));
+                        if (!exactMatch) visible = false;
+                    }
 
                     card.style.display = visible ? '' : 'none';
                 });
             };
 
-            if (nameFilter) nameFilter.addEventListener('input', applyFilters);
+            if (cards.length > 0) {
+                // 1. Calculate realistic max slider constraints and pool all active unique brands
+                let maxP = 0;
+                let uniqueProviders = new Set();
+
+                cards.forEach(c => {
+                    const p = parseInt(c.dataset.price || 0);
+                    if (p > maxP) maxP = p;
+
+                    // Locate and snag the formatted brand name visible directly inside
+                    const carrierNameEl = c.querySelector('.carrier-name, .hotel-name');
+                    if (carrierNameEl) {
+                        const rawTitle = carrierNameEl.innerText.trim();
+                        // Mirror the case matching payload locally
+                        c.dataset.name = rawTitle.toLowerCase();
+                        uniqueProviders.add(rawTitle);
+                    }
+                });
+
+                if (maxP > 0 && priceFilter) {
+                    maxP = Math.ceil(maxP / 500) * 500;
+                    priceFilter.max = maxP;
+                    priceFilter.value = maxP;
+                    if (priceVal) priceVal.textContent = maxP.toLocaleString('en-IN');
+                }
+
+                // 2. Dynamically build & inject checkboxes for matching results
+                if (providerContainer && uniqueProviders.size > 0) {
+                    const sortedProviders = Array.from(uniqueProviders).sort();
+
+                    sortedProviders.forEach(prov => {
+                        const label = document.createElement('label');
+                        label.style.display = 'flex';
+                        label.style.alignItems = 'center';
+                        label.style.gap = '8px';
+                        label.style.cursor = 'pointer';
+                        label.style.fontSize = '14px';
+                        label.style.fontWeight = '700';
+                        label.style.color = 'var(--text)';
+                        label.style.padding = '4px 0';
+                        label.style.transition = 'color 0.2s';
+
+                        label.addEventListener('mouseenter', () => label.style.color = 'var(--accent)');
+                        label.addEventListener('mouseleave', () => label.style.color = 'var(--text)');
+
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.value = prov;
+                        input.className = 'provider-chk';
+                        input.style.accentColor = 'var(--accent)';
+                        input.style.width = '16px';
+                        input.style.height = '16px';
+                        input.style.cursor = 'pointer';
+
+                        // Hook the check flip into the master filter application
+                        input.addEventListener('change', applyFilters);
+
+                        label.appendChild(input);
+                        const textNode = document.createTextNode(prov);
+                        label.appendChild(textNode);
+                        providerContainer.appendChild(label);
+                    });
+                }
+            }
+
             if (priceFilter) priceFilter.addEventListener('input', applyFilters);
         });
     </script>

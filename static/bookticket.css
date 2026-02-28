@@ -997,13 +997,67 @@ footer {
 
 /* ═══ RESPONSIVE ══════════════════════════════ */
 @media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px 4%;
+        text-align: center;
+    }
+
+    header nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        margin-top: 5px;
+    }
+
     .hero h1 {
-        font-size: 42px;
+        font-size: 38px;
+    }
+
+    .hero p {
+        font-size: 16px;
     }
 
     .search-card {
-        margin: -50px 16px 40px;
-        padding: 28px 24px 36px;
+        margin: -40px 16px 40px;
+        padding: 28px 20px 32px;
+        border-radius: 20px;
+    }
+
+    .cat-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .cat-tab {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .booking-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .btn-search {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    .promos {
+        grid-template-columns: 1fr;
+        padding: 0 4% 40px;
     }
 
     .ticket-card {
@@ -1011,10 +1065,20 @@ footer {
         align-items: flex-start;
     }
 
-    .hotel-grid-wrapper {
-        grid-template-columns: 1fr;
+    .ticket-card .ticket-divider {
+        display: none;
     }
 
+    .ticket-middle {
+        margin: 15px 0;
+    }
+
+    .ticket-price {
+        align-items: flex-start;
+        margin-top: 10px;
+    }
+
+    .hotel-grid-wrapper,
     .deals-grid {
         grid-template-columns: 1fr;
     }

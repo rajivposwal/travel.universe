@@ -361,6 +361,9 @@
             <a href="/food" style="font-size:14px;font-weight:700;color:var(--muted);text-decoration:none;">
                 <i class="fas fa-utensils"></i> Food Menu
             </a>
+            <a href="/flights/data" style="font-size:14px;font-weight:700;color:var(--accent);text-decoration:none;">
+                <i class="fas fa-plane-departure"></i> Live Flights Data
+            </a>
         </nav>
         <div class="header-actions">
             {% if logged_in %}
@@ -577,6 +580,8 @@
         </div>
     </div>
 
+    <!-- ─── Flights Data Section removed ──── -->
+
     <!-- ─── Terms & Conditions ──────────────────── -->
     <div style="padding: 24px 4%; max-width: 1400px; margin: 40px auto 20px;">
         <p
@@ -735,6 +740,17 @@
         });
     </script>
     {% endif %}
+
+    <!-- Date restriction system -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tzoffset = (new Date()).getTimezoneOffset() * 60000; // local offset
+            const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                input.setAttribute('min', localISOTime);
+            });
+        });
+    </script>
 
 </body>
 

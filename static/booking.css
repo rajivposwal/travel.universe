@@ -949,27 +949,96 @@
     .booking-summary-bar {
         flex-direction: column;
         align-items: flex-start;
+        padding: 15px 4%;
     }
 
-    .pay-field-group {
-        grid-template-columns: 1fr;
+    .bsb-route {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .progress-header {
+        padding: 20px 4%;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+
+    .progress-step span {
+        font-size: 10px;
+    }
+
+    .progress-connector {
+        min-width: 20px;
+    }
+
+    .book-container {
+        padding: 30px 4%;
+    }
+
+    /* Keep seatmap scrollable horizontally */
+    .seat-map,
+    .bus-seats,
+    .berth-grid {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    .seat {
+        width: 32px;
+        height: 32px;
+        font-size: 9px;
+    }
+
+    .seat-gap,
+    .bus-aisle {
+        width: 15px;
+    }
+
+    .plane-nose {
+        width: 100%;
+        max-width: 300px;
+        height: 40px;
+    }
+
+    .plane-tail {
+        width: 100%;
+        max-width: 300px;
+        height: 30px;
     }
 
     .rooms-grid {
         grid-template-columns: 1fr;
     }
 
-    .seat-map {
-        padding: 12px;
+    .selection-status {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+        bottom: 10px;
     }
 
-    .seat {
-        width: 34px;
-        height: 34px;
-        font-size: 9px;
+    .sel-left {
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
     }
 
-    .berth-grid {
-        gap: 10px;
+    .sel-right {
+        justify-content: space-between;
+    }
+
+    .pay-field-group {
+        grid-template-columns: 1fr;
+    }
+
+    .step-actions {
+        flex-direction: column;
+    }
+
+    .step-actions .btn {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
     }
 }

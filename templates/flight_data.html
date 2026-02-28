@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Flight Data — ASRS Travel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bookticket.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .grid-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 25px rgba(255, 159, 28, 0.2) !important;
+        }
+
+        .grid-card {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="window.location='/'"><i class="fas fa-plane logo-plane"></i>SRS<span> Travel</span>
+        </div>
+        <div class="header-actions">
+            <a href="/"><button class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Home</button></a>
+        </div>
+    </header>
+
+    <div style="padding: 40px 4%; max-width: 1400px; margin: 0 auto;">
+        <h1 style="font-size:32px; font-weight:900; color:var(--text); margin-bottom:10px;">
+            <i class="fas fa-plane-departure" style="color:var(--accent);"></i> Live Flights Data
+        </h1>
+        <p style="color:var(--muted); font-size:16px; margin-bottom:30px; line-height:1.6;">
+            Showing global flight availability retrieved directly from the <b>FlightHive</b> Explorer API endpoints.
+        </p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:20px;">
+            {% for f in flights %}
+            <div class="grid-card"
+                style="background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px; box-shadow:0 6px 15px var(--shadow);">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px dashed var(--border); padding-bottom:15px;">
+                    <span style="font-size:18px; font-weight:900; color:var(--text);">
+                        <i class="fas fa-plane" style="color:var(--accent); margin-right:8px;"></i>
+                        {{ f.airline }}{{ f.flight_number }}
+                    </span>
+                    <strong style="color:var(--accent); font-size:20px;">₹{{ f.price }}</strong>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:center;">
+                        <div style="font-size:28px; font-weight:900; color:var(--text); letter-spacing:1px;">{{ f.origin
+                            }}</div>
+                        <div style="color:var(--muted); font-size:14px; font-weight:700; margin-top:5px;"><i
+                                class="fas fa-clock"></i> {{ f.departure_time }}</div>
+                    </div>
+
+                    <div style="color:var(--muted); font-size:20px; opacity:0.5;">
+                        <i class="fas fa-long-arrow-alt-right"></i>
+                    </div>
+
+                    <div style="text-align:center;">
+                        <div style="font-size:28px; font-weight:900; color:var(--text); letter-spacing:1px;">{{
+                            f.destination }}</div>
+                        <div style="color:var(--muted); font-size:14px; font-weight:700; margin-top:5px;"><i
+                                class="fas fa-clock"></i> {{ f.arrival_time }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not flights %}
+            <div
+                style="background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:30px; grid-column:1 / -1; text-align:center;">
+                <p style="color:var(--muted); font-size:16px; font-weight:600;">No live flight data found from the API.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <button id="theme-toggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
+    <script src="{{ url_for('static', filename='bookticket.js') }}"></script>
+</body>
+
+</html>
