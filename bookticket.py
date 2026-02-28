@@ -1003,9 +1003,6 @@ def results():
 # ── Booking page ───────────────────────────────────────
 
 
-import datetime
-import re
-
 @app.route("/book")
 @login_required
 def book():
@@ -1013,6 +1010,7 @@ def book():
     item_id = request.args.get('id', '')
     dep = request.args.get('dep', '--:--')
     arr = request.args.get('arr', '--:--')
+    date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
     
     true_schedule = None
     if t_type == 'Flight' and item_id:
@@ -1035,17 +1033,20 @@ def book():
                     # Safely extract epoch timestamps and parse them into human readable clock format
                     dep_epoch = first_leg.get('time', {}).get('scheduled', {}).get('departure')
                     arr_epoch = first_leg.get('time', {}).get('scheduled', {}).get('arrival')
-                    dep_str = datetime.datetime.fromtimestamp(dep_epoch).strftime('%Y-%m-%d %H:%M') if dep_epoch else f"{date} {dep}"
-                    arr_str = datetime.datetime.fromtimestamp(arr_epoch).strftime('%Y-%m-%d %H:%M') if arr_epoch else f"{date} {arr}"
+                    dep_str = datetime.fromtimestamp(dep_epoch).strftime('%Y-%m-%d %H:%M') if dep_epoch else f"{date} {dep}"
+                    arr_str = datetime.fromtimestamp(arr_epoch).strftime('%Y-%m-%d %H:%M') if arr_epoch else f"{date} {arr}"
                     
                     # Dynamically adjust price dynamically scaling by live epoch shifts or fall back to user's given price
                     base_req_price = int(request.args.get('price', 0))
                     live_price = base_req_price + random.randint(150, 1500) if base_req_price > 0 else 5000
                     
                     ac_model = first_leg.get('aircraft', {})
-                    if ac_model: ac_model = ac_model.get('model', {})
-                    if ac_model: ac_model = ac_model.get('code', 'Boeing 737')
-                    else: ac_model = 'Airbus A320'
+                    if ac_model:
+                        ac_model = ac_model.get('model', {})
+                    if ac_model:
+                        ac_model = ac_model.get('code', 'Boeing 737')
+                    else:
+                        ac_model = 'Airbus A320'
 
                     true_schedule = {
                         "flight": f_num,
@@ -1175,9 +1176,6 @@ def hotels():
                            hotels=hotels_list,
                            logged_in=True,
                            user_name=session.get('user', ''))
-
-
-
 # ────────# ── User Profile ────────────────────────────────────────
 
 

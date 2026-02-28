@@ -816,20 +816,36 @@
             <!-- Edit Profile -->
             <div class="pr-card">
                 <div class="pr-section-title"><i class="fas fa-user-edit"></i> Edit Profile</div>
-                <form action="{{ url_for('profile_update') }}" method="POST" style="display:flex;flex-direction:column;gap:12px;">
+                <form action="{{ url_for('profile_update') }}" method="POST"
+                    style="display:flex;flex-direction:column;gap:12px;">
                     <div>
-                        <label class="pr-label" style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Username</label>
-                        <input class="pr-input" style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;" type="text" name="new_username" required value="{{ user.username }}">
+                        <label class="pr-label"
+                            style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Username</label>
+                        <input class="pr-input"
+                            style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;"
+                            type="text" name="new_username" required value="{{ user.username }}">
                     </div>
                     <div>
-                        <label class="pr-label" style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Email Address</label>
-                        <input class="pr-input" style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;" type="email" name="email" required value="{{ user.email }}">
+                        <label class="pr-label"
+                            style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Email
+                            Address</label>
+                        <input class="pr-input"
+                            style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;"
+                            type="email" name="email" required value="{{ user.email }}">
                     </div>
                     <div>
-                        <label class="pr-label" style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Mobile Number</label>
-                        <input class="pr-input" style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;" type="tel" name="phone" maxlength="10" placeholder="Enter 10-digit number" value="{{ user.phone or '' }}" pattern="[0-9]{10}" title="10-digit Indian mobile number">
+                        <label class="pr-label"
+                            style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block;">Mobile
+                            Number</label>
+                        <input class="pr-input"
+                            style="width:100%;padding:14px;border-radius:12px;background:var(--input-bg);border:1px solid var(--input-brd);color:var(--text);font-weight:700;"
+                            type="tel" name="phone" maxlength="10" placeholder="Enter 10-digit number"
+                            value="{{ user.phone or '' }}" pattern="[0-9]{10}" title="10-digit Indian mobile number">
                     </div>
-                    <button type="submit" class="pr-save-btn" style="margin-top:10px;padding:14px;background:var(--accent);color:white;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;transition:transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(255,159,28,0.4)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                    <button type="submit" class="pr-save-btn"
+                        style="margin-top:10px;padding:14px;background:var(--accent);color:white;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;transition:transform 0.15s, box-shadow 0.15s;"
+                        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(255,159,28,0.4)'"
+                        onmouseout="this.style.transform='none';this.style.boxShadow='none'">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </form>
@@ -899,7 +915,7 @@
                 {% set icons =
                 {'Flight':'fa-plane','Hotel':'fa-hotel','Train':'fa-train','Bus':'fa-bus','Food':'fa-utensils'} %}
                 <div class="bk-card" data-type="{{ b.service_type }}" data-status="{{ b.status }}"
-                    onclick="window.location.href='{{ url_for('manage_booking', booking_ref=b.booking_ref) }}'"
+                    onclick="window.location.href=`{{ url_for('manage_booking', booking_ref=b.booking_ref) }}`;"
                     style="cursor:pointer; position:relative;">
                     <div class="bk-icon {{ b.service_type }}">
                         <i class="fas {{ icons.get(b.service_type, 'fa-ticket-alt') }}"></i>
@@ -1045,13 +1061,13 @@
                 var label = filter === '__pending__' ? 'pending' : filter.toLowerCase();
                 if (shown === 0 && cards.length > 0) {
                     if (!empty) {
-                        var div = document.createElement('div');
-                        div.id = 'bk-empty-filtered';
-                        div.className = 'bk-empty';
-                        div.innerHTML = '<i class="fas fa-filter"></i><h3>No ' + label + ' bookings</h3>' +
-                            '<p>You have no ' + label + ' bookings at the moment.</p>';
-                        document.getElementById('bk-list').after(div);
+                        empty = document.createElement('div');
+                        empty.id = 'bk-empty-filtered';
+                        empty.className = 'bk-empty';
+                        document.getElementById('bk-list').after(empty);
                     }
+                    empty.innerHTML = '<i class="fas fa-filter"></i><h3>No ' + label + ' bookings</h3>' +
+                        '<p>You have no ' + label + ' bookings at the moment.</p>';
                 } else {
                     if (empty) empty.remove();
                 }
