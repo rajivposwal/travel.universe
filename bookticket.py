@@ -29,6 +29,15 @@ AMADEUS_API_SECRET = os.environ.get(
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "airports.db")
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads")
+
+if os.environ.get("VERCEL"):
+    import shutil
+    TMP_DB = "/tmp/airports.db"
+    if not os.path.exists(TMP_DB) and os.path.exists(DB_PATH):
+        shutil.copy2(DB_PATH, TMP_DB)
+    DB_PATH = TMP_DB
+    UPLOAD_FOLDER = "/tmp/uploads"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
