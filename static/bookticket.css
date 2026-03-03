@@ -346,6 +346,18 @@ header {
 }
 
 /* ═══ RESULTS PAGE ═══════════════════════════ */
+.filter-sidebar {
+    flex: 1 1 250px;
+    max-width: 300px;
+    position: sticky;
+    top: 100px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 30px var(--shadow);
+}
+
 .results-header {
     padding: 50px 6% 30px;
     border-bottom: 1px solid var(--border);
@@ -1091,6 +1103,14 @@ footer {
     .hotel-grid-wrapper {
         padding: 24px 4%;
     }
+
+    .filter-sidebar {
+        position: relative;
+        top: 0;
+        max-width: 100%;
+        margin-bottom: 20px;
+        flex: 1 1 100%;
+    }
 }
 
 /* ─── Voice Assistant Accessibility ─── */
@@ -1124,9 +1144,17 @@ footer {
 }
 
 @keyframes voicePulse {
-    0% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7); }
-    70% { box-shadow: 0 0 0 20px rgba(6, 214, 160, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 20px rgba(6, 214, 160, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(6, 214, 160, 0);
+    }
 }
 
 .voice-status-toast {
