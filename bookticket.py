@@ -3,6 +3,8 @@ bookticket.py  –  ASRS Travel v4.0
 Clean, DB-backed, multi-modal ticket booking system
 """
 
+
+
 from functools import wraps
 from flask import (Flask, render_template, request, jsonify,
                    session, redirect, url_for, flash, get_flashed_messages)
@@ -1184,9 +1186,16 @@ def hotels():
 def profile():
     username = session['user']
     with get_db() as conn:
-        user = dict(conn.execute(
+        user_row = conn.execute(
             "SELECT * FROM users WHERE username = ?", (username,)
-        ).fetchone())
+        ).fetchone()
+        
+        if not user_row:
+            session.clear()
+            flash("Session expired or user not found. Please log in again.", "error")
+            return redirect(url_for('login'))
+            
+        user = dict(user_row)
         bookings = [dict(r) for r in conn.execute(
             "SELECT * FROM bookings WHERE user_id = ? ORDER BY booked_at DESC",
             (user['id'],)
@@ -1294,15 +1303,20 @@ def manage_booking(booking_ref):
 def cancel_booking(booking_ref):
     username = session['user']
     with get_db() as conn:
-        user = dict(
-            conn.execute(
-                "SELECT id FROM users WHERE username = ?",
-                (username,
-                 )).fetchone())
+        user_row = conn.execute(
+            "SELECT id FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
+        if not user_row:
+            session.clear()
+            flash("Session expired or user not found.", "error")
+            return redirect(url_for('login'))
+        user = dict(user_row)
+        
         row = conn.execute(
             "SELECT * FROM bookings WHERE booking_ref = ? AND user_id = ?",
-            (booking_ref,
-             user['id'])).fetchone()
+            (booking_ref, user['id'])
+        ).fetchone()
         if not row:
             flash("Booking not found.", "error")
             return redirect(url_for('profile'))
